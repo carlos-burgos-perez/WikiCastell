@@ -1,0 +1,5 @@
+/* Aisla el logotipo de las reglas genéricas de la antigua cabecera. */
+.brand .brand-copy{display:block!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--text)!important;font-family:inherit!important}
+.brand .brand-copy b{display:block!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--text)!important;font:23px Georgia,serif!important;letter-spacing:-.5px}
+.brand .brand-copy small{display:block!important;width:auto!important;height:auto!important;margin:3px 0 0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--text)!important;font:11px Georgia,serif!important;letter-spacing:0}
+.brand .wiki-mark{margin:0!important;padding:0!important;color:var(--text)!important}

@@ -1,0 +1,87 @@
+{
+  "manifest": {
+    "pages": [
+      {
+        "slug": "inicio",
+        "title": "Página de inicio",
+        "category": "General",
+        "summary": "Tu punto de partida personal."
+      },
+      {
+        "slug": "indice",
+        "title": "Índice",
+        "category": "General",
+        "summary": "Listado de todas las páginas."
+      },
+      {
+        "slug": "notas",
+        "title": "Notas",
+        "category": "Conocimiento",
+        "summary": "Ideas y apuntes rápidos."
+      },
+      {
+        "slug": "tesoreria",
+        "title": "Tesorería",
+        "category": "Tesorería",
+        "summary": "Resumen de cuentas y movimientos."
+      },
+      {
+        "slug": "pagos",
+        "title": "Pagos",
+        "category": "Tesorería",
+        "summary": "Seguimiento de pagos pendientes y realizados."
+      },
+      {
+        "slug": "secretaria",
+        "title": "Secretaría",
+        "category": "Secretaría",
+        "summary": "Gestión administrativa y comunicaciones."
+      },
+      {
+        "slug": "loteria",
+        "title": "Lotería",
+        "category": "Lotería",
+        "summary": "Información y gestión de lotería."
+      },
+      {
+        "slug": "furriel",
+        "title": "Furriel",
+        "category": "Furriel",
+        "summary": "Material, logística y suministros."
+      },
+      {
+        "slug": "archiveros",
+        "title": "Archiveros",
+        "category": "Archiveros",
+        "summary": "Archivo y documentación."
+      },
+      {
+        "slug": "lista-de-presidentes",
+        "title": "Lista de presidentes",
+        "category": "Otras páginas",
+        "summary": "Listado de presidentes cronológicamente del castell vermell"
+      },
+      {
+        "slug": "listado-de-musicos",
+        "title": "Listado de músicos",
+        "category": "Otras páginas",
+        "summary": ""
+      }
+    ],
+    "categories": [
+      "Tesorería",
+      "Secretaría",
+      "Lotería",
+      "Furriel",
+      "Archiveros",
+      "Conocimiento",
+      "General",
+      "Otras páginas"
+    ]
+  },
+  "pages": {
+    "lista-de-presidentes": "# Lista de presidentes\n\n## Presidentes del Castell Vermell\n\n:::anchos 32.9761%, 27.3087%, 39.6084%\n| Nombre del presidente | Fecha de inicio | Fecha de finalización |\n| --- | --- | --- |\n| Rafa | 2005 | 2008 |\n| Maria José Gómez | 2005 | 2008 |\n| Carlos Pascual | 2011 | 2014 |\n| Antonio Martí | 2017 | 2017 |\n| Miguel Ángel Gil | 2017 | 2020 |\n| Alejandro Castelló | 2020 | 2023 |\n| Alfonso Gallego | 2023 | 2026 |\n| Jose González | 2026 | Actualidad |\n\n## Directiva Vigente\n\n:::anchos 33.1731%, 66.7201%\n| Cargo | Nombre |\n| --- | --- |\n| Presidente | José González |\n| Vicepresidente | Ferran Pastor |\n| Secretaria | Ariadna Giménez |\n| Tesorero | Carlos Burgos |\n| Archivo | Carolina Guillem, Guillem Pastor |\n| Furriel | Carolina Chacón |\n| Lotería | Carlos Verdú |\n| Redes Sociales | Paula Martí |\n| Vocales | Miguel Ángel Serrano, Javier Pastor, Jordi Serrano, Alejandro Lledó |\n\n## Directiva Anterior\n\n:::anchos 33.1731%, 66.7201%\n| Cargo | Nombre |\n| --- | --- |\n| Presidente | Alfonso Gallego |\n| Vicepresidente |  |\n| Secretaria | Rosa Almiñana |\n| Tesorero | Esteban Verdú |\n| Archivo |  |\n| Furriel |  |\n| Lotería | Xavier Pastor |\n| Redes Sociales |  |\n| Vocales |  |",
+    "listado-de-musicos": "# Listado de músicos\n\nListado de músicos del Taller Música Castell Vermell junto con su fecha de inicio en la banda:\n\n## Flautas\n\n- Lucía Gázquez\n- Ana Cutillas\n- María Martínez\n- Paula Martí\n- Raúl González\n- Silvia Juan\n\n## Oboes\n\n- Alejandro Lledó\n- Germán Bernabéu\n- Vicente López\n- Álvaro Serrano\n\n## Clarinetes\n\n- Alejandro Castelló\n- Antonio Martí\n- Antonio Martí Bernabéu\n- Ariadna Giménez\n- Benedicto Ripoll\n- Carlos Valls\n- Claudia Juan\n- Fernando Jiménez\n- Javier Bernabéu\n- Jose Javier García\n- Julia Grande\n- Rosa Almiñana\n\n## Saxofones Altos\n\n- Ana Nepomuceno - 2026\n- Candela Sanjuan\n- Carlos Burgos\n- Carolina Guillem\n- Mar Valero\n- Marce Turcu\n- Mario Moya\n- María Moya\n- Miguel Ángel Serrano\n\n## Saxofones Tenores\n\n- Carolina Chacón\n- Francisco Alfonso Serrano - 2026\n- Juan Antonio Chacón\n- Juan Vicente Bernabéu\n\n## Saxofó Barítono\n\n- Pepe García\n\n## Trompas\n- Bernat Pastor\n- Ferran Pastor\n- Jaume Cortés\n\n## Fliscorno\n- Marcos Cifuentes\n\n## Trompetas\n- Alfonso González\n- Guillem Pastor\n- José González\n- Juan José Sancho\n- Marta Serrano\n- Pau Valls\n\n## Trombones\n- Carlos Verdú\n- Daniel Boronat\n- Joan Sánchez\n- Jorge Sempere\n- Marina López\n- Rafa Cortés\n\n## Bombardino\n- Jaime Climent\n\n## Tubas\n- Vicent Galvany\n- Pedro Ayora\n\n## Percusión\n- Alfonso Gallego\n- Daniel Jiménez - 2026\n- David Martínez - 2026\n- Hugo Agulló\n- Jordi Serrano\n- Marco Gómez\n- Nacho Guillem\n- Nicolás Hípola\n- Paco Agulló\n- Rafa Aznar\n- Rubén López\n- Sandra Verdú\n\n## Xaramitas\n- Kotu Gea\n- Alejandro Castelló\n- Alfonso González\n- Elio Verdú\n- Esteban Verdú\n- Ferran Pastor\n- Javi Navarro\n- Jorge Segura\n- Jose Tomás\n- Juan José Sancho\n- Miguel Ángel Gil\n- Rosa Almiñana\n- Rosa Martínez\n- Sandra Verdú\n- Tony Cremades\n- Vicente López\n- Vicente Barrachina\n",
+    "loteria": "# Lotería\n\nA modo resumen y a falta de explicarlo un poco más:\n\n- La gente debe pagar en efectivo a menos que compren una cantidad grande de boletos de lotería. En el momento de pagar se puede dejar como pendiente y habría que apuntarlo para tenerlo en cuenta que se debe dinero.\n- Solo se puede fiar en caso de que sea por domiciliación a clientes (miembros de la escuela) y socios. consultar lista de socios\n- Las fechas máximas para vender boletos será el 15 de diciembre para la loteria de navidad y el 5 de enero para la loteria del niño\n- Las cuentas tienen que estar perfectamente cuadradas\n- Se recomienda hacer los recibos al momento para no olvidarlos\n- Los recibos de domiciliación se pasan una semana antes de que se realice el sorteo para así poder tener tiempo y pasar la domicialiación junto con la remesa de los alumnos\n- En efectivo se puede seguir vendiendo lotería hasta el último momento"
+  }
+}
