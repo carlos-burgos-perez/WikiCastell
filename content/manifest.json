@@ -71,6 +71,12 @@
       "title": "a",
       "category": "Otras páginas",
       "summary": ""
+    },
+    {
+      "slug": "guia-de-uso-de-la-wiki",
+      "title": "Guía de uso de la wiki",
+      "category": "Otras páginas",
+      "summary": "Guía paso a paso para lectores, administradores y desarrolladores."
     }
   ],
   "categories": [
