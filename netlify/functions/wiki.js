@@ -19,11 +19,20 @@ function admin(event, secret) {
 }
 
 function githubConfig() {
-  const { GITHUB_TOKEN: token, GITHUB_OWNER: owner, GITHUB_REPO: repo } = process.env;
-  if (!token || !owner || !repo) {
-    throw new Error('Falta configurar GITHUB_TOKEN, GITHUB_OWNER y GITHUB_REPO en Netlify.');
+  const token = process.env.GITHUB_TOKEN;
+  const owner = process.env.GITHUB_OWNER;
+  const repo = process.env.GITHUB_REPO;
+  const branch = process.env.GITHUB_BRANCH || 'main';
+  const missing = [
+    ['GITHUB_TOKEN', token],
+    ['GITHUB_OWNER', owner],
+    ['GITHUB_REPO', repo]
+  ].filter(([, value]) => !value?.trim()).map(([name]) => name);
+
+  if (missing.length) {
+    throw new Error(`Netlify no está proporcionando a esta función: ${missing.join(', ')}. Comprueba el alcance Functions y el contexto del deploy.`);
   }
-  return { token, owner, repo, branch: process.env.GITHUB_BRANCH || 'main' };
+  return { token: token.trim(), owner: owner.trim(), repo: repo.trim(), branch: branch.trim() };
 }
 
 function repositoryUrl(config, path) {
