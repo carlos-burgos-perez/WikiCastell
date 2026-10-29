@@ -1,14 +1,80 @@
 {
   "pages": [
-    {"slug":"inicio","title":"Página de inicio","category":"General","summary":"Tu punto de partida personal."},
-    {"slug":"indice","title":"Índice","category":"General","summary":"Listado de todas las páginas."},
-    {"slug":"notas","title":"Notas","category":"Conocimiento","summary":"Ideas y apuntes rápidos."},
-    {"slug":"tesoreria","title":"Tesorería","category":"Tesorería","summary":"Resumen de cuentas y movimientos."},
-    {"slug":"pagos","title":"Pagos","category":"Tesorería","summary":"Seguimiento de pagos pendientes y realizados."},
-    {"slug":"secretaria","title":"Secretaría","category":"Secretaría","summary":"Gestión administrativa y comunicaciones."},
-    {"slug":"loteria","title":"Lotería","category":"Lotería","summary":"Información y gestión de lotería."},
-    {"slug":"furriel","title":"Furriel","category":"Furriel","summary":"Material, logística y suministros."},
-    {"slug":"archiveros","title":"Archiveros","category":"Archiveros","summary":"Archivo y documentación."}
+    {
+      "slug": "inicio",
+      "title": "Página de inicio",
+      "category": "General",
+      "summary": "Tu punto de partida personal."
+    },
+    {
+      "slug": "indice",
+      "title": "Índice",
+      "category": "General",
+      "summary": "Listado de todas las páginas."
+    },
+    {
+      "slug": "notas",
+      "title": "Notas",
+      "category": "Conocimiento",
+      "summary": "Ideas y apuntes rápidos."
+    },
+    {
+      "slug": "tesoreria",
+      "title": "Tesorería",
+      "category": "Tesorería",
+      "summary": "Resumen de cuentas y movimientos."
+    },
+    {
+      "slug": "pagos",
+      "title": "Pagos",
+      "category": "Tesorería",
+      "summary": "Seguimiento de pagos pendientes y realizados."
+    },
+    {
+      "slug": "secretaria",
+      "title": "Secretaría",
+      "category": "Secretaría",
+      "summary": "Gestión administrativa y comunicaciones."
+    },
+    {
+      "slug": "loteria",
+      "title": "Lotería",
+      "category": "Lotería",
+      "summary": "Información y gestión de lotería."
+    },
+    {
+      "slug": "furriel",
+      "title": "Furriel",
+      "category": "Furriel",
+      "summary": "Material, logística y suministros."
+    },
+    {
+      "slug": "archiveros",
+      "title": "Archiveros",
+      "category": "Archiveros",
+      "summary": "Archivo y documentación."
+    },
+    {
+      "slug": "lista-de-presidentes",
+      "title": "Lista de presidentes",
+      "category": "Otras páginas",
+      "summary": "Listado de presidentes cronológicamente del castell vermell"
+    },
+    {
+      "slug": "listado-de-musicos",
+      "title": "Listado de músicos",
+      "category": "Otras páginas",
+      "summary": ""
+    }
   ],
-  "categories": ["Tesorería", "Secretaría", "Lotería", "Furriel", "Archiveros", "Conocimiento", "General", "Otras páginas"]
+  "categories": [
+    "Tesorería",
+    "Secretaría",
+    "Lotería",
+    "Furriel",
+    "Archiveros",
+    "Conocimiento",
+    "General",
+    "Otras páginas"
+  ]
 }

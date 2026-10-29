@@ -1,5 +1,5 @@
-const { getStore } = require('@netlify/blobs');
 const crypto = require('crypto');
+
 const response = (status, body) => ({
   statusCode: status,
   headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
@@ -18,8 +18,92 @@ function admin(event, secret) {
   catch { return false; }
 }
 
+function githubConfig() {
+  const { GITHUB_TOKEN: token, GITHUB_OWNER: owner, GITHUB_REPO: repo } = process.env;
+  if (!token || !owner || !repo) {
+    throw new Error('Falta configurar GITHUB_TOKEN, GITHUB_OWNER y GITHUB_REPO en Netlify.');
+  }
+  return { token, owner, repo, branch: process.env.GITHUB_BRANCH || 'main' };
+}
+
+function repositoryUrl(config, path) {
+  return `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/${path}`;
+}
+
+async function githubRequest(config, path, options = {}) {
+  const result = await fetch(repositoryUrl(config, path), {
+    ...options,
+    headers: {
+      accept: 'application/vnd.github+json',
+      authorization: `Bearer ${config.token}`,
+      'x-github-api-version': '2022-11-28',
+      ...(options.body ? { 'content-type': 'application/json' } : {}),
+      ...options.headers
+    }
+  });
+  const text = await result.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; }
+  catch { throw new Error(`GitHub devolvió una respuesta no válida (${result.status}).`); }
+  if (!result.ok) {
+    const error = new Error(data.message || `GitHub respondió con el error ${result.status}.`);
+    error.status = result.status;
+    throw error;
+  }
+  return data;
+}
+
+async function readFile(config, filePath) {
+  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
+  const result = await githubRequest(config, `contents/${encodedPath}?ref=${encodeURIComponent(config.branch)}`);
+  if (result.encoding !== 'base64' || typeof result.content !== 'string') {
+    throw new Error(`GitHub no devolvió el archivo ${filePath} en formato base64.`);
+  }
+  return Buffer.from(result.content.replace(/\s/g, ''), 'base64').toString('utf8');
+}
+
+async function commitFiles(config, files, message) {
+  const branch = encodeURIComponent(config.branch);
+  const reference = await githubRequest(config, `git/ref/heads/${branch}`);
+  const parentSha = reference.object.sha;
+  const parentCommit = await githubRequest(config, `git/commits/${parentSha}`);
+  const tree = await githubRequest(config, 'git/trees', {
+    method: 'POST',
+    body: JSON.stringify({
+      base_tree: parentCommit.tree.sha,
+      tree: files.map(file => ({
+        path: file.path,
+        mode: '100644',
+        type: 'blob',
+        content: file.content
+      }))
+    })
+  });
+  const commit = await githubRequest(config, 'git/commits', {
+    method: 'POST',
+    body: JSON.stringify({ message, tree: tree.sha, parents: [parentSha] })
+  });
+  await githubRequest(config, `git/refs/heads/${branch}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ sha: commit.sha, force: false })
+  });
+}
+
+function githubError(error) {
+  if (error.status === 401 || error.status === 403) {
+    return 'GitHub ha rechazado el token. Comprueba que tiene permiso Contents: Read and write para este repositorio.';
+  }
+  if (error.status === 404) {
+    return 'No se encontró el repositorio o la rama. Comprueba GITHUB_OWNER, GITHUB_REPO y GITHUB_BRANCH, y el acceso del token.';
+  }
+  if (error.status === 409 || error.status === 422) {
+    return 'GitHub no pudo actualizar la rama. Comprueba si está protegida o si ha cambiado durante el guardado.';
+  }
+  return 'No se pudo acceder al repositorio de GitHub. Revisa la configuración y los logs de la función.';
+}
+
 exports.handler = async event => {
-  const q = event.queryStringParameters || {};
+  const query = event.queryStringParameters || {};
   if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT') {
     return response(405, { error: 'Método no permitido' });
   }
@@ -30,17 +114,28 @@ exports.handler = async event => {
     if (!admin(event, secret)) return response(401, { error: 'No autorizado' });
   }
 
+  let config;
+  try { config = githubConfig(); }
+  catch (error) { return response(500, { error: error.message }); }
+
   try {
-    const store = getStore('wiki-content');
     if (event.httpMethod === 'GET') {
-      if (q.type === 'manifest') {
-        return response(200, { manifest: await store.get('manifest', { type: 'json' }) || { pages: [], categories: [] } });
+      if (query.type === 'manifest') {
+        try {
+          const manifest = JSON.parse(await readFile(config, 'content/manifest.json'));
+          return response(200, { manifest });
+        } catch (error) {
+          if (error.status === 404) return response(200, { manifest: { pages: [], categories: [] } });
+          throw error;
+        }
       }
-      if (q.slug) {
-        const content = await store.get(`pages/${q.slug}`);
-        return content ? response(200, { content }) : response(404, { error: 'No existe una versión guardada' });
+      if (!/^[a-z0-9-]+$/.test(query.slug || '')) return response(400, { error: 'Falta una página válida' });
+      try {
+        return response(200, { content: await readFile(config, `content/${query.slug}.md`) });
+      } catch (error) {
+        if (error.status === 404) return response(404, { error: 'No existe una versión guardada' });
+        throw error;
       }
-      return response(400, { error: 'Falta página' });
     }
 
     let input;
@@ -50,15 +145,18 @@ exports.handler = async event => {
       return response(400, { error: 'Datos inválidos' });
     }
     const { slug, content, manifest } = input;
-    if (!/^[a-z0-9-]+$/.test(slug || '') || typeof content !== 'string' || !manifest) {
+    if (!/^[a-z0-9-]+$/.test(slug || '') || typeof content !== 'string' ||
+        !manifest || !Array.isArray(manifest.pages) || !Array.isArray(manifest.categories)) {
       return response(400, { error: 'Datos inválidos' });
     }
 
-    await store.set(`pages/${slug}`, content);
-    await store.setJSON('manifest', manifest);
+    await commitFiles(config, [
+      { path: `content/${slug}.md`, content },
+      { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
+    ], `Save wiki page: ${slug}`);
     return response(200, { ok: true });
   } catch (error) {
-    console.error('Error al acceder al almacenamiento de Wiki Blobs:', error);
-    return response(500, { error: 'No se pudo acceder al almacenamiento de Netlify. Revisa la configuración y los logs de la función.' });
+    console.error('Error al guardar páginas en GitHub:', error);
+    return response(500, { error: githubError(error) });
   }
 };
