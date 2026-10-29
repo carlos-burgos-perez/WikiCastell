@@ -18,6 +18,26 @@ const body = req => new Promise(resolve => { let raw=''; req.on('data',d=>raw+=d
 http.createServer(async (req,res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   if(url.pathname === '/api/auth' && req.method === 'POST') { const input=await body(req); const user=process.env.WIKI_ADMIN_USER||'admin', pass=process.env.WIKI_ADMIN_PASSWORD||'admin'; if(!input || input.username!==user || input.password!==pass)return send(res,401,{error:'Credenciales incorrectas'}); const payload=Buffer.from(JSON.stringify({role:'admin',exp:Date.now()+43200000})).toString('base64url'); return send(res,200,{token:`${payload}.${crypto.createHmac('sha256',secret).update(payload).digest('base64url')}`}); }
-  if(url.pathname === '/api/wiki') { const data=readData(); if(req.method==='GET' && url.searchParams.get('type')==='manifest')return send(res,200,{manifest:data.manifest}); const slug=url.searchParams.get('slug'); if(req.method==='GET' && slug)return data.pages[slug] ? send(res,200,{content:data.pages[slug]}) : send(res,404,{error:'No existe una versión guardada'}); if(req.method==='PUT') { if(!valid(req))return send(res,401,{error:'No autorizado'}); const input=await body(req); if(!input || !/^[a-z0-9-]+$/.test(input.slug||'') || typeof input.content!=='string')return send(res,400,{error:'Datos inválidos'}); data.pages[input.slug]=input.content; data.manifest=input.manifest; writeData(data); return send(res,200,{ok:true}); } return send(res,400,{error:'Solicitud inválida'}); }
+  if(url.pathname === '/api/wiki') {
+    try {
+      const data = readData();
+      if (req.method === 'GET' && url.searchParams.get('type') === 'manifest') return send(res, 200, {manifest:data.manifest});
+      const slug = url.searchParams.get('slug');
+      if (req.method === 'GET' && slug) return data.pages[slug] ? send(res, 200, {content:data.pages[slug]}) : send(res, 404, {error:'No existe una versión guardada'});
+      if (req.method === 'PUT') {
+        if (!valid(req)) return send(res, 401, {error:'No autorizado'});
+        const input = await body(req);
+        if (!input || !/^[a-z0-9-]+$/.test(input.slug || '') || typeof input.content !== 'string' || !input.manifest) return send(res, 400, {error:'Datos inválidos'});
+        data.pages[input.slug] = input.content;
+        data.manifest = input.manifest;
+        writeData(data);
+        return send(res, 200, {ok:true});
+      }
+      return send(res, 400, {error:'Solicitud inválida'});
+    } catch (error) {
+      console.error('Error al guardar contenido de Wiki:', error);
+      return send(res, 500, {error:'No se pudo guardar en el almacenamiento local. Comprueba los permisos del archivo de datos.'});
+    }
+  }
   const relative=url.pathname==='/' ? 'index.html' : decodeURIComponent(url.pathname).replace(/^\/+/, ''); const file=path.resolve(root,relative); if(!file.startsWith(root+path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()){res.writeHead(404);return res.end('No encontrado');} res.writeHead(200,{'content-type':types[path.extname(file)]||'application/octet-stream'});fs.createReadStream(file).pipe(res);
 }).listen(port, () => console.log(`Wiki disponible en http://localhost:${port}`));

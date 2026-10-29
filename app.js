@@ -4,7 +4,18 @@ const state = { manifest: { pages: [], categories: [] }, token: sessionStorage.g
 
 const escapeHtml = (value = '') => value.replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
 const slugify = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-async function json(url, options) { const response = await fetch(url, options); if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'No se pudo completar la operación'); return response.json(); }
+async function json(url, options) {
+  const response = await fetch(url, options);
+  const text = await response.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+  if (!response.ok) {
+    const detail = data.error || `El servidor respondió con el error ${response.status}${response.statusText ? ` (${response.statusText})` : ''}.`;
+    throw new Error(detail);
+  }
+  if (!data || typeof data !== 'object') throw new Error('El servidor devolvió una respuesta no válida.');
+  return data;
+}
 
 function renderMarkdownLegacy(source = '') {
   let html = escapeHtml(source);
