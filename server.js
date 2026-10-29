@@ -11,7 +11,7 @@ const secret = process.env.WIKI_SESSION_SECRET || 'solo-desarrollo-local';
 const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.md':'text/markdown; charset=utf-8'};
 const readData = () => { try { return JSON.parse(fs.readFileSync(dataFile, 'utf8')); } catch { return {manifest:{pages:[],categories:[]},pages:{}}; } };
 const writeData = data => fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
-const send = (res, status, data) => { res.writeHead(status, {'content-type':'application/json','cache-control':'no-store'}); res.end(JSON.stringify(data)); };
+const send = (res, status, data) => { res.writeHead(status, {'content-type':'application/json; charset=utf-8','cache-control':'no-store'}); res.end(JSON.stringify(data)); };
 const valid = req => { const [payload,sig] = (req.headers.authorization || '').replace('Bearer ','').split('.'); if(!payload || !sig) return false; const expected=crypto.createHmac('sha256',secret).update(payload).digest('base64url'); if(sig.length!==expected.length || !crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(expected)))return false; try{return JSON.parse(Buffer.from(payload,'base64url')).exp>Date.now()}catch{return false} };
 const body = req => new Promise(resolve => { let raw=''; req.on('data',d=>raw+=d); req.on('end',()=>{try{resolve(JSON.parse(raw||'{}'))}catch{resolve(null)}}); });
 

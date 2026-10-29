@@ -46,6 +46,9 @@ exports.handler = async event => {
     let input;
     try { input = JSON.parse(event.body || '{}'); }
     catch { return response(400, { error: 'La solicitud contiene JSON no válido' }); }
+    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+      return response(400, { error: 'Datos inválidos' });
+    }
     const { slug, content, manifest } = input;
     if (!/^[a-z0-9-]+$/.test(slug || '') || typeof content !== 'string' || !manifest) {
       return response(400, { error: 'Datos inválidos' });

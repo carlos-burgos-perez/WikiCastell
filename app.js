@@ -8,7 +8,11 @@ async function json(url, options) {
   const response = await fetch(url, options);
   const text = await response.text();
   let data;
-  try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+  try { data = text ? JSON.parse(text) : {}; }
+  catch {
+    if (response.ok) throw new Error('El servidor devolvió una respuesta no válida.');
+    data = {};
+  }
   if (!response.ok) {
     const detail = data.error || `El servidor respondió con el error ${response.status}${response.statusText ? ` (${response.statusText})` : ''}.`;
     throw new Error(detail);
