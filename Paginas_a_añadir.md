@@ -11,4 +11,5 @@
 
 Mejoras estéticas
 Icono de la web
-Indice ordenado por orden alfabético
+Indice ordenado por orden alfabético 
+Posibilidad de ordenar las pafginas de un categoria con el boton de editar
