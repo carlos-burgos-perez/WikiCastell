@@ -6,8 +6,6 @@ Bienvenido a la Wiki Vermell. Esta guía explica paso a paso cómo leerla, cómo
 
 La wiki está pensada para consultar información. **Las páginas se pueden leer sin iniciar sesión.** Solo hace falta una cuenta de administrador para crear o cambiar contenido.
 
-Ten en cuenta que las páginas son públicas para cualquier persona que pueda abrir la web. No publiques contraseñas, datos bancarios, información médica ni datos personales que no deban ser públicos.
-
 ## Para cualquier persona: consultar la wiki
 
 ### Abrir una página
@@ -39,11 +37,7 @@ Estos ajustes solo cambian cómo ves la wiki en tu navegador; no modifican ningu
 
 ### Las credenciales y cómo protegerlas
 
-En la web publicada, el usuario y la contraseña de administrador son los valores privados configurados en Netlify como `WIKI_ADMIN_USER` y `WIKI_ADMIN_PASSWORD`. Pídelos al responsable de la wiki o al propietario de Netlify.
-
-**No escribas la contraseña real en esta página, en un archivo del proyecto ni en un chat.** Esta guía se puede leer públicamente. Guarda las credenciales en un gestor de contraseñas y compártelas solo con las personas autorizadas. Si se pierde una contraseña, el propietario del sitio debe cambiar `WIKI_ADMIN_PASSWORD` en Netlify y volver a desplegar.
-
-En un servidor de desarrollo local, si no se han configurado variables de acceso, se usan `admin` / `admin`. Esos valores son únicamente para probar el proyecto en el ordenador: **no son las credenciales de la web publicada y no se deben usar en producción**.
+En la web publicada, el usuario y la contraseña de administrador son valores privados, por lo que se recomienda consultar estas al desarrollador de la pagina. En caso de perder una contraseña, se puede consultar de nuevo o recuperar comunicándose con el desarrollador de la página (Carlos Burgos).
 
 ### Iniciar sesión y salir
 
@@ -68,12 +62,12 @@ La sesión se conserva en ese navegador durante un máximo de 12 horas. Al cerra
 
 El título determina la dirección de la página. Por ejemplo, **Lista de socios** se convierte en `lista-de-socios`. Usa títulos distintos para no confundir páginas. La dirección de una página existente no cambia al editarla.
 
-Una página publicada puede tardar un poco en aparecer para todo el mundo mientras Netlify actualiza la web.
+Una página publicada puede tardar un poco en aparecer para todo el mundo mientras se actualiza la web.
 
 ### Editar una página
 
 1. Abre la página que quieras cambiar.
-2. Haz clic en **Editar** para usar el editor visual o en **Editar código** para escribir Markdown.
+2. Haz clic en **Editar** para usar el editor visual o en **Editar código** para escribir Markdown (formato de código).
 3. Puedes cambiar el título, la categoría, el resumen, la página superior y el contenido.
 4. Revisa los cambios y pulsa **Publicar cambios**.
 
@@ -87,16 +81,18 @@ Si una página tiene apartados, puede aparecer un enlace **editar** junto a cada
 
 1. Haz clic dentro del texto y selecciona las palabras que quieres cambiar.
 2. Usa la barra del editor:
-   - **B**: negrita.
+
+- **B**: negrita.
    - **I**: cursiva.
    - **Título**: crear un apartado.
    - **Lista**: crear una lista con puntos.
    - **Cita**: destacar una cita.
    - **Enlace**: enlazar texto a una dirección web.
    - **Tabla**, **Imagen** y **Desplegable**: insertar esos elementos.
-3. Para una tabla, indica el número de columnas y filas y luego sustituye los textos de ejemplo.
-4. Para una imagen, proporciona una dirección web que empiece por `https://` o `http://`. La imagen debe estar alojada en una dirección accesible; el editor no sube archivos desde el ordenador.
-5. El desplegable muestra su contenido cuando el lector abre el bloque.
+
+1. Para una tabla, indica el número de columnas y filas y luego sustituye los textos de ejemplo.
+2. Para una imagen, proporciona una dirección web que empiece por `https://` o `http://`. La imagen debe estar alojada en una dirección accesible; el editor no sube archivos desde el ordenador.
+3. El desplegable muestra su contenido cuando el lector abre el bloque.
 
 ### Usar el editor de código
 
@@ -115,19 +111,11 @@ Cuando termines, revisa la vista previa y pulsa **Publicar cambios**. Si no est�
 
 ### Qué hacer si algo falla
 
-- **No puedo iniciar sesión:** comprueba que usuario y contraseña estén escritos tal como te los dieron. Si sigue fallando, pide al propietario que revise las credenciales de Netlify.
+- **No puedo iniciar sesión:** comprueba que usuario y contraseña estén escritos tal como te los dieron. Si sigue fallando, pide al propietario que revise las credenciales.
 - **No veo los botones de edición:** comprueba si has iniciado sesión. Si no, el navegador está en modo lectura.
-- **El guardado muestra un error de GitHub o Netlify:** no pulses publicar repetidamente. Copia el texto del error y envíaselo al responsable de la wiki; no incluyas contraseñas ni tokens.
-- **La página no aparece al instante:** espera a que Netlify termine el despliegue y vuelve a cargar la web.
+- **El guardado muestra un error de GitHub o Netlify:** no pulses publicar repetidamente. Copia el texto del error y envíaselo al responsable de la wiki; no incluyas contraseñas, tokens ni nada que pueda comprometer la seguridad.
+- **La página no aparece al instante:** espera a que la web termine el despliegue y vuelve a cargarla.
 - **He publicado un cambio incorrecto:** avisa al responsable. Los cambios se guardan en GitHub; la wiki no tiene un botón para deshacer ni para eliminar páginas.
-
-## Historial de cambios y versión
-
-Este historial es un resumen sencillo para orientarse. Se actualiza a mano; no es una lista automática de todas las ediciones.
-
-- **Versión 1.0 — 29 de octubre de 2026:** se añade esta guía para lectores, administradores y desarrolladores; se documentan la publicación de páginas como archivos Markdown y el cuidado de las credenciales.
-
-Los guardados individuales generan commits en GitHub. El historial completo de esos cambios técnicos se consulta en el repositorio; no aparece automáticamente en esta lista.
 
 ## Información para desarrolladores
 
