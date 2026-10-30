@@ -4,7 +4,7 @@ Añadir a continuación en formato de lista novedades que se consideren interesa
 
 ## Errores
 
-
-
 ## Sugerencias
-* Añadir un botón con el icono de un ojo para poder ver la contraseña que se ha escrito al iniciar sesión
+
+- Añadir un botón con el icono de un ojo para poder ver la contraseña que se ha escrito al iniciar sesión
+- Hay que pulir mucho la visualización desde telefono movil
