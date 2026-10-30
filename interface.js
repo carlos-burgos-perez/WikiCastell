@@ -29,7 +29,7 @@
       let group = null;
       document.querySelectorAll('#navigation .category, #navigation .page-link').forEach(node => {
         if (node.classList.contains('category')) { group = { title: node.textContent, pages: [] }; groups.push(group); }
-        else if (group && node.getAttribute('href') !== '#inicio') group.pages.push({ title: node.textContent, href: node.getAttribute('href') });
+        else if (group && !node.closest('.subpages') && node.getAttribute('href') !== '#inicio') group.pages.push({ title: node.textContent, href: node.getAttribute('href') });
       });
       const section = document.createElement('section');
       section.className = 'home-categories';
@@ -56,7 +56,7 @@
       });
       const section = document.createElement('section');
       section.className = 'all-pages-index';
-      section.innerHTML = groups.filter(group => group.pages.length).sort((a, b) => a.title.localeCompare(b.title, 'es')).map(group => `<section><h2>${group.title}</h2><ul>${group.pages.sort((a, b) => a.title.localeCompare(b.title, 'es')).map(page => `<li><a href="${page.href}">${page.title}</a></li>`).join('')}</ul></section>`).join('');
+      section.innerHTML = groups.filter(group => group.pages.length).sort((a, b) => a.title.localeCompare(b.title, 'es')).map(group => `<section><h2>${group.title}</h2><ul>${group.pages.map(page => `<li><a href="${page.href}">${page.title}</a></li>`).join('')}</ul></section>`).join('');
       section.querySelectorAll('a').forEach(link => link.addEventListener('click', event => {
         event.preventDefault(); const navigationLink = document.querySelector(`#navigation .page-link[href="${link.getAttribute('href')}"]`); if (navigationLink) navigationLink.click();
       }));

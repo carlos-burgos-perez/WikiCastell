@@ -69,9 +69,12 @@ Una página publicada puede tardar un poco en aparecer para todo el mundo mientr
 1. Abre la página que quieras cambiar.
 2. Haz clic en **Editar** para usar el editor visual o en **Editar código** para escribir Markdown (formato de código).
 3. Puedes cambiar el título, la categoría, el resumen, la página superior y el contenido.
-4. Revisa los cambios y pulsa **Publicar cambios**.
+4. Indica la **Posición en la categoría** para decidir dónde aparecerá la página. La primera posición aparece antes que las demás. Si la página es una subpágina, la posición se aplica entre las subpáginas de su nivel.
+5. Revisa los cambios y pulsa **Publicar cambios**.
 
-Al cambiar la categoría, la página aparecerá bajo la nueva categoría. Si cambias el título, se mantiene la dirección existente.
+Al cambiar la categoría, la página aparecerá al final de la nueva categoría; puedes cambiar su posición antes de publicar. Si cambias el título, se mantiene la dirección existente. La navegación y el índice respetan el orden guardado.
+
+Si eliges una **Página superior**, la página aparecerá como subpágina en el menú lateral, pero no se insertará automáticamente en el contenido de su página superior. Para enlazarla en el punto que quieras, escribe el enlace en el editor de código o selecciona texto en el editor visual y usa **Enlace**.
 
 ### Editar solo un apartado
 
@@ -83,12 +86,18 @@ Si una página tiene apartados, puede aparecer un enlace **editar** junto a cada
 2. Usa la barra del editor:
 
 - **B**: negrita.
-   - **I**: cursiva.
-   - **Título**: crear un apartado.
-   - **Lista**: crear una lista con puntos.
-   - **Cita**: destacar una cita.
-   - **Enlace**: enlazar texto a una dirección web.
-   - **Tabla**, **Imagen** y **Desplegable**: insertar esos elementos.
+
+- **I**: cursiva.
+
+- **Título**: crear un apartado.
+
+- **Lista**: crear una lista con puntos.
+
+- **Cita**: destacar una cita.
+
+- **Enlace**: enlazar texto a una dirección web.
+
+- **Tabla**, **Imagen** y **Desplegable**: insertar esos elementos.
 
 1. Para una tabla, indica el número de columnas y filas y luego sustituye los textos de ejemplo.
 2. Para una imagen, proporciona una dirección web que empiece por `https://` o `http://`. La imagen debe estar alojada en una dirección accesible; el editor no sube archivos desde el ordenador.
@@ -96,9 +105,11 @@ Si una página tiene apartados, puede aparecer un enlace **editar** junto a cada
 
 ### Usar el editor de código
 
-El editor de código permite escribir Markdown. Muestra una vista previa a la derecha.
+El editor de código permite escribir Markdown. Muestra una vista previa a la derecha. Para crear un enlace manual a otra página de la wiki, pon el enlace justo donde quieras que aparezca y usa su dirección corta (`slug`) como destino, empezando por `#`. Por ejemplo, `[Ver tesorería](#tesoreria)`. Al pulsarlo, se abrirá esa página dentro de la wiki. Los enlaces a direcciones web siguen abriéndose en otra pestaña.
 
-Ejemplos: escribe `## Título de apartado` para un apartado y `- Primer elemento` para una lista. Para poner negrita o cursiva, también puedes seleccionar el texto en el editor visual y pulsar **B** o **I**. En el editor de código, los enlaces se escriben poniendo el texto entre corchetes y la dirección web entre paréntesis.
+En el editor visual también puedes seleccionar el texto, pulsar **Enlace** e introducir `#slug` como dirección. Por ejemplo, `#tesoreria` abre la página **Tesorería**.
+
+Para anidar apartados en el índice de la página, usa niveles de título Markdown: `## Apartado`, `### Subapartado`, `#### Apartado de tercer nivel` y así hasta `######`. Cada nivel aparece más sangrado que el anterior. También puedes escribir `- Primer elemento` para crear una lista. Para poner negrita o cursiva, selecciona el texto en el editor visual y pulsa **B** o **I**.
 
 Para una tabla sencilla, escribe estas líneas en el editor:
 
@@ -115,9 +126,13 @@ Cuando termines, revisa la vista previa y pulsa **Publicar cambios**. Si no est�
 - **No veo los botones de edición:** comprueba si has iniciado sesión. Si no, el navegador está en modo lectura.
 - **El guardado muestra un error de GitHub o Netlify:** no pulses publicar repetidamente. Copia el texto del error y envíaselo al responsable de la wiki; no incluyas contraseñas, tokens ni nada que pueda comprometer la seguridad.
 - **La página no aparece al instante:** espera a que la web termine el despliegue y vuelve a cargarla.
-- **He publicado un cambio incorrecto:** avisa al responsable. Los cambios se guardan en GitHub; la wiki no tiene un botón para deshacer ni para eliminar páginas.
+- **He publicado un cambio incorrecto:** avisa al responsable. Los cambios se guardan en GitHub; la wiki no tiene un botón para deshacer ni para eliminar página.
+
+Si se encuentra algún error fuera de los especificados o alguna mejor que se desee implementar, por favor, anótese en la página de [sugerencias y mejoras](#sugerencias-y-mejoras)
 
 ## Información para desarrolladores
+
+Se podrá observar el [changelog](#changelog) en su página correspondiente.
 
 ### Cómo está organizado el proyecto
 
