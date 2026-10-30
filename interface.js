@@ -17,12 +17,6 @@
     document.querySelectorAll('.font-choice').forEach(b => b.classList.toggle('active', b === button));
   }));
   const observer = new MutationObserver(() => {
-    const header = document.querySelector('.article-header');
-    if (header && !header.parentElement.querySelector('.page-tabs')) {
-      const tabs = document.createElement('div');
-      tabs.className = 'page-tabs'; tabs.innerHTML = '<span>Artículo</span><span>Discusión</span><span>Leer</span>';
-      header.parentElement.insertBefore(tabs, header.nextSibling);
-    }
     const article = document.querySelector('#article');
     const isHome = location.hash === '' || location.hash === '#inicio';
     if (article && isHome && !article.querySelector('.home-categories')) {
@@ -45,8 +39,8 @@
         if (navigationLink) navigationLink.click();
       }));
       section.querySelector('#add-other-page')?.addEventListener('click', () => window.openWikiEditor?.('Otras páginas'));
-      const tabs = article.querySelector('.page-tabs');
-      if (tabs) tabs.insertAdjacentElement('beforebegin', section);
+      const historyActions = article.querySelector('.page-history-actions');
+      if (historyActions) historyActions.insertAdjacentElement('beforebegin', section);
     }
     const isIndex = location.hash === '#indice';
     if (article && isIndex && !article.querySelector('.all-pages-index')) {
@@ -67,8 +61,8 @@
       section.querySelectorAll('a').forEach(link => link.addEventListener('click', event => {
         event.preventDefault(); const navigationLink = document.querySelector(`#navigation .page-link[href="${link.getAttribute('href')}"]`); if (navigationLink) navigationLink.click();
       }));
-      const tabs = article.querySelector('.page-tabs');
-      if (tabs) tabs.insertAdjacentElement('beforebegin', section);
+      const historyActions = article.querySelector('.page-history-actions');
+      if (historyActions) historyActions.insertAdjacentElement('beforebegin', section);
     }
   });
   observer.observe(document.querySelector('#article'), {childList:true, subtree:true});

@@ -324,7 +324,7 @@ async function loadPage(requestedSlug) {
   $('#article').innerHTML = '<div class="loading">Cargando página…</div>';
   try { state.current.content = (await json(`${api}?slug=${encodeURIComponent(page.slug)}`)).content; }
   catch { state.current.content = await (await fetch(`content/${page.slug}.md`)).text(); }
-  $('#article').innerHTML = `<div class="article-inner"><header class="article-header"><div><div class="article-category">${escapeHtml(page.category || 'General')}</div><h1>${escapeHtml(page.title)}</h1></div>${pageActions()}</header><div class="article-body">${markdown(bodyMarkdown(state.current.content))}</div><nav class="page-tabs"><span>Artículo</span><span>Discusión</span><span>Leer</span><button type="button" id="page-history-button">Historial</button></nav></div>`;
+  $('#article').innerHTML = `<div class="article-inner"><header class="article-header"><div><div class="article-category">${escapeHtml(page.category || 'General')}</div><h1>${escapeHtml(page.title)}</h1></div>${pageActions()}</header><div class="article-body">${markdown(bodyMarkdown(state.current.content))}</div><div class="page-history-actions"><button type="button" id="page-history-button">Historial</button></div></div>`;
   if (state.token) { const childButton = document.createElement('button'); childButton.className = 'edit-button'; childButton.textContent = 'Crear subpágina'; childButton.addEventListener('click', () => openEditor('visual', true, state.current.category, state.current.slug)); $('.edit-actions').prepend(childButton); }
   renderPageToc(); renderSectionEditLinks();
   renderTopPageLinks();
