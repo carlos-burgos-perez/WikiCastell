@@ -113,7 +113,7 @@ function githubError(error) {
 
 exports.handler = async event => {
   const query = event.queryStringParameters || {};
-  if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT' && event.httpMethod !== 'DELETE') {
+  if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT' && event.httpMethod !== 'PATCH' && event.httpMethod !== 'DELETE') {
     return response(405, { error: 'Método no permitido' });
   }
 
@@ -138,6 +138,17 @@ exports.handler = async event => {
           throw error;
         }
       }
+      if (query.history !== undefined) {
+        if (!/^[a-z0-9-]+$/.test(query.history || '')) return response(400, { error: 'Falta una página válida' });
+        try {
+          const history = JSON.parse(await readFile(config, `content/history/${query.history}.json`));
+          if (!history || !Array.isArray(history.revisions)) throw new Error('El historial de la página no tiene un formato válido.');
+          return response(200, history);
+        } catch (error) {
+          if (error.status === 404) return response(200, { revisions: [] });
+          throw error;
+        }
+      }
       if (!/^[a-z0-9-]+$/.test(query.slug || '')) return response(400, { error: 'Falta una página válida' });
       try {
         return response(200, { content: await readFile(config, `content/${query.slug}.md`) });
@@ -153,6 +164,65 @@ exports.handler = async event => {
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
       return response(400, { error: 'Datos inválidos' });
     }
+    if (event.httpMethod === 'PATCH') {
+      if (!Array.isArray(input.categories) ||
+          input.categories.some(category => typeof category !== 'string' || !category.trim() || category.trim().length > 80) ||
+          new Set(input.categories.map(category => category.trim().toLocaleLowerCase('es'))).size !== input.categories.length) {
+        return response(400, { error: 'La lista de categorías no es válida' });
+      }
+      const categories = input.categories.map(category => category.trim());
+      if (input.hiddenCategories !== undefined &&
+          (!Array.isArray(input.hiddenCategories) ||
+           input.hiddenCategories.some(category => typeof category !== 'string' || !categories.includes(category)) ||
+           new Set(input.hiddenCategories).size !== input.hiddenCategories.length)) {
+        return response(400, { error: 'La lista de categorías ocultas no es válida' });
+      }
+      const manifest = JSON.parse(await readFile(config, 'content/manifest.json'));
+      if (input.renameCategory !== undefined) {
+        if (input.deleteCategory !== undefined || typeof input.renameCategory !== 'string' ||
+            !manifest.categories.includes(input.renameCategory) || typeof input.newCategoryName !== 'string' ||
+            !input.newCategoryName.trim() || input.newCategoryName.trim().length > 80 ||
+            categories.length !== manifest.categories.length || categories.includes(input.renameCategory) ||
+            !categories.includes(input.newCategoryName.trim()) ||
+            manifest.categories.filter(category => category !== input.renameCategory).some(category => !categories.includes(category))) {
+          return response(400, { error: 'El cambio de nombre de la categoría no es válido' });
+        }
+        manifest.pages = manifest.pages.map(page => page.category === input.renameCategory
+          ? { ...page, category: input.newCategoryName.trim() }
+          : page);
+        manifest.hiddenCategories = (manifest.hiddenCategories || []).map(category =>
+          category === input.renameCategory ? input.newCategoryName.trim() : category
+        );
+      } else if (input.deleteCategory !== undefined) {
+        if (typeof input.deleteCategory !== 'string' || !manifest.categories.includes(input.deleteCategory) ||
+            categories.includes(input.deleteCategory) ||
+            manifest.categories.filter(category => category !== input.deleteCategory).some(category => !categories.includes(category)) ||
+            categories.length !== manifest.categories.length - 1) {
+          return response(400, { error: 'La categoría que se quiere eliminar no es válida' });
+        }
+        const pagesInCategory = manifest.pages.filter(page => page.category === input.deleteCategory);
+        if (pagesInCategory.length && (typeof input.movePagesTo !== 'string' ||
+            !categories.includes(input.movePagesTo) || input.movePagesTo === input.deleteCategory)) {
+          return response(400, { error: 'Elige una categoría de destino válida para conservar las páginas' });
+        }
+        if (pagesInCategory.length) {
+          manifest.pages = manifest.pages.map(page => page.category === input.deleteCategory
+            ? { ...page, category: input.movePagesTo }
+            : page);
+        }
+      } else if (manifest.categories.some(category => !categories.includes(category)) ||
+          manifest.pages.some(page => !categories.includes(page.category))) {
+        return response(400, { error: 'No se pueden quitar categorías que todavía tienen páginas' });
+      }
+      manifest.categories = categories;
+      if (input.hiddenCategories !== undefined) manifest.hiddenCategories = input.hiddenCategories;
+      else if (input.deleteCategory !== undefined) manifest.hiddenCategories = (manifest.hiddenCategories || []).filter(category => category !== input.deleteCategory);
+      else if (!Array.isArray(manifest.hiddenCategories)) manifest.hiddenCategories = [];
+      await commitFiles(config, [
+        { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
+      ], input.deleteCategory ? `Delete wiki category: ${input.deleteCategory}` : input.renameCategory ? `Rename wiki category: ${input.renameCategory}` : 'Update wiki categories');
+      return response(200, { ok: true });
+    }
     const { slug, content, manifest } = input;
     if (!/^[a-z0-9-]+$/.test(slug || '') ||
         !manifest || !Array.isArray(manifest.pages) || !Array.isArray(manifest.categories)) {
@@ -161,10 +231,31 @@ exports.handler = async event => {
 
     if (event.httpMethod === 'PUT') {
       if (typeof content !== 'string') return response(400, { error: 'Datos inválidos' });
-      await commitFiles(config, [
+      const currentManifest = JSON.parse(await readFile(config, 'content/manifest.json'));
+      const previousPage = currentManifest.pages.find(page => page.slug === slug);
+      const nextPage = manifest.pages.find(page => page.slug === slug);
+      let previousContent = null;
+      if (previousPage && nextPage) {
+        try { previousContent = await readFile(config, `content/${slug}.md`); }
+        catch (error) { if (error.status !== 404) throw error; }
+      }
+      const files = [
         { path: `content/${slug}.md`, content },
         { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
-      ], `Save wiki page: ${slug}`);
+      ];
+      if (previousPage && nextPage && previousContent !== null &&
+          (previousContent !== content || previousPage.title !== nextPage.title)) {
+        let history = { revisions: [] };
+        try {
+          history = JSON.parse(await readFile(config, `content/history/${slug}.json`));
+          if (!history || !Array.isArray(history.revisions)) throw new Error('El historial de la página no tiene un formato válido.');
+        } catch (error) {
+          if (error.status !== 404) throw error;
+        }
+        history.revisions.push({ timestamp: new Date().toISOString(), title: previousPage.title, content: previousContent });
+        files.push({ path: `content/history/${slug}.json`, content: `${JSON.stringify(history, null, 2)}\n` });
+      }
+      await commitFiles(config, files, `Save wiki page: ${slug}`);
     } else {
       const currentManifest = JSON.parse(await readFile(config, 'content/manifest.json'));
       if (!currentManifest.pages.some(page => page.slug === slug)) {
@@ -175,8 +266,16 @@ exports.handler = async event => {
         return response(400, { error: 'El manifiesto no elimina la página correctamente' });
       }
       await readFile(config, `content/${slug}.md`);
+      let historyExists = false;
+      try {
+        await readFile(config, `content/history/${slug}.json`);
+        historyExists = true;
+      } catch (error) {
+        if (error.status !== 404) throw error;
+      }
       await commitFiles(config, [
         { path: `content/${slug}.md`, delete: true },
+        ...(historyExists ? [{ path: `content/history/${slug}.json`, delete: true }] : []),
         { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
       ], `Delete wiki page: ${slug}`);
     }

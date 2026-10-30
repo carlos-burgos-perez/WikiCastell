@@ -14,7 +14,7 @@ La wiki está pensada para consultar información. **Las páginas se pueden leer
 2. Busca el título de la página debajo de su categoría.
 3. Haz clic en el título. El contenido aparecerá en el centro.
 4. Si una página tiene apartados, puedes usar su índice para saltar directamente a uno.
-5. Haz clic en **Contenido** para abrir el índice general. Haz clic en el logotipo **Wiki Vermell** para volver al inicio.
+5. Haz clic en **Contenido** para abrir el índice general, que reúne las páginas visibles en orden alfabético, agrupadas por su letra inicial. Haz clic en el logotipo **Wiki Vermell** para volver al inicio.
 
 ### Buscar
 
@@ -30,8 +30,11 @@ En el panel **Apariencia** puedes elegir:
 
 - **Normal** o **Grande** para cambiar el tamaño de letra.
 - **Claro** u **Oscuro** para cambiar los colores.
+- Un ancho de lectura **Compacto**, **Normal** o **Amplio**.
+- Un espaciado de texto **Compacto**, **Normal** o **Amplio**.
+- Un color de acento para los enlaces y controles.
 
-Estos ajustes solo cambian cómo ves la wiki en tu navegador; no modifican ninguna página.
+Estos ajustes solo cambian cómo ves la wiki en tu navegador y se guardan en ese navegador; no modifican ninguna página.
 
 ## Para administradores
 
@@ -54,7 +57,7 @@ La sesión se conserva en ese navegador durante un máximo de 12 horas. Al cerra
 1. Inicia sesión.
 2. Haz clic en **Crear página** en el menú de la izquierda. Si quieres crearla dentro de otra, abre esa página y haz clic en **Crear subpágina**.
 3. Escribe un **Título**. Es el nombre visible de la página y es obligatorio.
-4. Escribe o elige una **Categoría**. También es obligatorio. Las categorías existentes aparecen como sugerencias; puedes escribir una nueva.
+4. Escribe o elige una **Categoría**. También es obligatorio. Las categorías existentes aparecen como sugerencias; puedes escribir una nueva o crearla antes desde **Categorías** en el menú lateral.
 5. Si aparece **Página superior**, elige una página para que esta nueva quede dentro de ella. Déjalo sin seleccionar si quieres una página normal dentro de la categoría.
 6. Si quieres, añade un **Resumen** corto.
 7. Escribe el contenido en el editor visual.
@@ -64,15 +67,27 @@ El título determina la dirección de la página. Por ejemplo, **Lista de socios
 
 Una página publicada puede tardar un poco en aparecer para todo el mundo mientras se actualiza la web.
 
+### Gestionar categorías
+
+1. Inicia sesión y pulsa **Categorías** en el menú lateral.
+2. Escribe un nombre y pulsa **Añadir categoría**. La categoría aparecerá aunque todavía no tenga páginas y estará disponible al crear o editar páginas.
+3. Arrastra una categoría para cambiar su posición. El nuevo orden se aplica al menú lateral y al inicio.
+4. Pulsa **Eliminar** para quitar una categoría. Si contiene páginas, elige otra categoría de destino; las páginas se conservarán y se moverán allí.
+5. Usa **Ocultar/Mostrar** para ocultar o volver a mostrar una categoría sin eliminarla. Sus páginas seguirán accesibles mediante enlaces directos.
+6. Pulsa **Renombrar** para cambiar el nombre de una categoría. Las páginas que contiene conservarán su contenido y dirección.
+
 ### Editar una página
 
 1. Abre la página que quieras cambiar.
 2. Haz clic en **Editar** para usar el editor visual o en **Editar código** para escribir Markdown (formato de código).
 3. Puedes cambiar el título, la categoría, el resumen, la página superior y el contenido.
 4. Indica la **Posición en la categoría** para decidir dónde aparecerá la página. La primera posición aparece antes que las demás. Si la página es una subpágina, la posición se aplica entre las subpáginas de su nivel.
-5. Revisa los cambios y pulsa **Publicar cambios**.
+5. Marca **Ocultar página de la navegación** si quieres retirarla del menú, el inicio, el índice y la búsqueda sin impedir que se abra con un enlace directo. Desmarca la opción para volver a mostrarla.
+6. Revisa los cambios y pulsa **Publicar cambios**.
 
-Al cambiar la categoría, la página aparecerá al final de la nueva categoría; puedes cambiar su posición antes de publicar. Si cambias el título, se mantiene la dirección existente. La navegación y el índice respetan el orden guardado.
+Pulsa **Historial** debajo del artículo para consultar versiones anteriores. Desde esta mejora, cada edición que cambie el contenido o el título guarda la versión anterior; los cambios hechos antes no se reconstruyen. Puedes abrir el contenido de cada versión y, como administrador, restaurarla. Al restaurar, la versión actual se conserva en el historial y se restaura el contenido y el título; la dirección de la página no cambia.
+
+Al cambiar la categoría, la página aparecerá al final de la nueva categoría; puedes cambiar su posición antes de publicar. Si cambias el título, se mantiene la dirección existente. La navegación respeta el orden guardado y el índice general ordena las páginas alfabéticamente.
 
 Si eliges una **Página superior**, la página aparecerá como subpágina en el menú lateral, pero no se insertará automáticamente en el contenido de su página superior. Para enlazarla en el punto que quieras, escribe el enlace en el editor de código o selecciona texto en el editor visual y usa **Enlace**.
 
@@ -99,7 +114,7 @@ Si una página tiene apartados, puede aparecer un enlace **editar** junto a cada
 
 - **Tabla**, **Imagen** y **Desplegable**: insertar esos elementos.
 
-1. Para una tabla, indica el número de columnas y filas y luego sustituye los textos de ejemplo.
+1. Para una tabla, indica el número de columnas y filas y luego sustituye los textos de ejemplo. Tanto al editar la página completa como al editar una sección, haz clic en una celda y usa **+ Fila**, **− Fila**, **+ Columna** o **− Columna** en la barra. La fila de cabecera se conserva; para quitar una fila, selecciona una celda de esa fila. No se puede eliminar la última columna.
 2. Para una imagen, proporciona una dirección web que empiece por `https://` o `http://`. La imagen debe estar alojada en una dirección accesible; el editor no sube archivos desde el ordenador.
 3. El desplegable muestra su contenido cuando el lector abre el bloque.
 

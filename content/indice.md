@@ -1,3 +1,3 @@
 # Índice
 
-Todas las páginas de Wiki Vermell, organizadas por categorías.
+Todas las páginas visibles de Wiki Vermell, ordenadas alfabéticamente y agrupadas por su letra inicial.
