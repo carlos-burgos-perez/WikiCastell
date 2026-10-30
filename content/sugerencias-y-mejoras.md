@@ -7,3 +7,4 @@ Añadir a continuación en formato de lista novedades que se consideren interesa
 
 
 ## Sugerencias
+* Añadir un botón con el icono de un ojo para poder ver la contraseña que se ha escrito al iniciar sesión
