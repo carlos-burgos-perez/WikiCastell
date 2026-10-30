@@ -3,16 +3,16 @@
 ## Presidentes del Castell Vermell
 
 :::anchos 32.9761%, 27.3087%, 39.6084%
-| Nombre del presidente | Fecha de inicio | Fecha de finalización |
-| --- | --- | --- |
-| Rafa | 2005 | 2008 |
-| Maria José Gómez | 2005 | 2008 |
-| Carlos Pascual | 2011 | 2014 |
-| Antonio Martí | 2017 | 2017 |
-| Miguel Ángel Gil | 2017 | 2020 |
-| Alejandro Castelló | 2020 | 2023 |
-| Alfonso Gallego | 2023 | 2026 |
-| Jose González | 2026 | Actualidad |
+| Nombre del presidente | Fecha de inicio | Fecha de finalización | Contacto|
+| --- | --- | --- |---|
+| Rafa | 2005 | 2008 ||
+| Maria José Gómez | 2005 | 2008 ||
+| Carlos Pascual | 2011 | 2014 ||
+| Antonio Martí | 2017 | 2017 ||
+| Miguel Ángel Gil | 2017 | 2020 ||
+| Alejandro Castelló | 2020 | 2023 ||
+| Alfonso Gallego | 2023 | 2026 ||
+| Jose González | 2026 | Actualidad ||
 
 ## Directiva Vigente
 
