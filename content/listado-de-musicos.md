@@ -52,19 +52,22 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Juan Antonio Chacón
 - Juan Vicente Bernabéu
 
-## Saxofó Barítono
+## Saxofón Barítono
 
 - Pepe García
 
 ## Trompas
+
 - Bernat Pastor
 - Ferran Pastor
 - Jaume Cortés
 
 ## Fliscorno
+
 - Marcos Cifuentes
 
 ## Trompetas
+
 - Alfonso González
 - Guillem Pastor
 - José González
@@ -73,6 +76,7 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Pau Valls
 
 ## Trombones
+
 - Carlos Verdú
 - Daniel Boronat
 - Joan Sánchez
@@ -81,13 +85,16 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Rafa Cortés
 
 ## Bombardino
+
 - Jaime Climent
 
 ## Tubas
+
 - Vicent Galvany
 - Pedro Ayora
 
 ## Percusión
+
 - Alfonso Gallego
 - Daniel Jiménez - 2026
 - David Martínez - 2026
@@ -102,6 +109,7 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Sandra Verdú
 
 ## Xaramitas
+
 - Kotu Gea
 - Alejandro Castelló
 - Alfonso González
