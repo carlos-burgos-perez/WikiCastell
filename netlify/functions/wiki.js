@@ -84,7 +84,7 @@ async function commitFiles(config, files, message) {
         path: file.path,
         mode: '100644',
         type: 'blob',
-        content: file.content
+        ...(file.delete ? { sha: null } : { content: file.content })
       }))
     })
   });
@@ -113,11 +113,11 @@ function githubError(error) {
 
 exports.handler = async event => {
   const query = event.queryStringParameters || {};
-  if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT') {
+  if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT' && event.httpMethod !== 'DELETE') {
     return response(405, { error: 'Método no permitido' });
   }
 
-  if (event.httpMethod === 'PUT') {
+  if (event.httpMethod !== 'GET') {
     const secret = process.env.WIKI_SESSION_SECRET;
     if (!secret) return response(500, { error: 'Falta configurar WIKI_SESSION_SECRET en Netlify' });
     if (!admin(event, secret)) return response(401, { error: 'No autorizado' });
@@ -154,15 +154,32 @@ exports.handler = async event => {
       return response(400, { error: 'Datos inválidos' });
     }
     const { slug, content, manifest } = input;
-    if (!/^[a-z0-9-]+$/.test(slug || '') || typeof content !== 'string' ||
+    if (!/^[a-z0-9-]+$/.test(slug || '') ||
         !manifest || !Array.isArray(manifest.pages) || !Array.isArray(manifest.categories)) {
       return response(400, { error: 'Datos inválidos' });
     }
 
-    await commitFiles(config, [
-      { path: `content/${slug}.md`, content },
-      { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
-    ], `Save wiki page: ${slug}`);
+    if (event.httpMethod === 'PUT') {
+      if (typeof content !== 'string') return response(400, { error: 'Datos inválidos' });
+      await commitFiles(config, [
+        { path: `content/${slug}.md`, content },
+        { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
+      ], `Save wiki page: ${slug}`);
+    } else {
+      const currentManifest = JSON.parse(await readFile(config, 'content/manifest.json'));
+      if (!currentManifest.pages.some(page => page.slug === slug)) {
+        return response(404, { error: 'La página ya no existe' });
+      }
+      if (manifest.pages.some(page => page.slug === slug) ||
+          manifest.pages.some(page => page.parent === slug) || !manifest.pages.length) {
+        return response(400, { error: 'El manifiesto no elimina la página correctamente' });
+      }
+      await readFile(config, `content/${slug}.md`);
+      await commitFiles(config, [
+        { path: `content/${slug}.md`, delete: true },
+        { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
+      ], `Delete wiki page: ${slug}`);
+    }
     return response(200, { ok: true });
   } catch (error) {
     console.error('Error al guardar páginas en GitHub:', error);

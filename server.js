@@ -40,6 +40,45 @@ http.createServer(async (req,res) => {
         writeFileAtomically(manifestFile, `${JSON.stringify(input.manifest, null, 2)}\n`);
         return send(res, 200, {ok:true});
       }
+      if (req.method === 'DELETE') {
+        if (!valid(req)) return send(res, 401, {error:'No autorizado'});
+        const input = await body(req);
+        const currentManifest = readManifest();
+        if (!input || !/^[a-z0-9-]+$/.test(input.slug || '') ||
+            !input.manifest || !Array.isArray(input.manifest.pages) || !Array.isArray(input.manifest.categories)) {
+          return send(res, 400, {error:'Datos inválidos'});
+        }
+        if (!currentManifest.pages.some(page => page.slug === input.slug)) return send(res, 404, {error:'La página ya no existe'});
+        if (input.manifest.pages.some(page => page.slug === input.slug) ||
+            input.manifest.pages.some(page => page.parent === input.slug) || !input.manifest.pages.length) {
+          return send(res, 400, {error:'El manifiesto no elimina la página correctamente'});
+        }
+        const pageFile = path.join(contentDir, `${input.slug}.md`);
+        const temporary = `${pageFile}.${process.pid}.${crypto.randomBytes(6).toString('hex')}.deleted`;
+        const previousManifest = fs.readFileSync(manifestFile, 'utf8');
+        try {
+          fs.renameSync(pageFile, temporary);
+        } catch (error) {
+          if (error.code === 'ENOENT') return send(res, 404, {error:'No existe una versión guardada de la página'});
+          throw error;
+        }
+        let manifestUpdated = false;
+        try {
+          writeFileAtomically(manifestFile, `${JSON.stringify(input.manifest, null, 2)}\n`);
+          manifestUpdated = true;
+          fs.unlinkSync(temporary);
+        } catch (error) {
+          try {
+            if (manifestUpdated) writeFileAtomically(manifestFile, previousManifest);
+            if (fs.existsSync(temporary)) fs.renameSync(temporary, pageFile);
+          } catch (rollbackError) {
+            console.error('No se pudo restaurar la página tras un error al eliminarla:', rollbackError);
+            throw new Error('Falló la eliminación y no se pudieron restaurar los archivos originales.');
+          }
+          throw error;
+        }
+        return send(res, 200, {ok:true});
+      }
       return send(res, 400, {error:'Solicitud inválida'});
     } catch (error) {
       console.error('Error al guardar contenido de Wiki:', error);

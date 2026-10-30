@@ -76,7 +76,7 @@ function refreshSession() {
 }
 function pageActions() { return state.token ? '<div class="edit-actions"><button class="edit-button" id="visual-edit">Editar</button><button class="edit-button" id="code-edit">Editar código</button></div>' : ''; }
 async function loadPage(requestedSlug) {
-  const page = state.manifest.pages.find(item => item.slug === requestedSlug) || state.manifest.pages.find(item => item.slug === 'inicio');
+  const page = state.manifest.pages.find(item => item.slug === requestedSlug) || state.manifest.pages.find(item => item.slug === 'inicio') || state.manifest.pages[0];
   if (!page) return;
   state.current = { ...page };
   document.querySelectorAll('.page-link').forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${page.slug}`));
@@ -94,6 +94,7 @@ function editorPage(isNew, category) { return isNew ? { title:'', category:categ
 function openEditor(type, isNew, presetCategory = '', presetParent = '') {
   if (!state.token) return; state.isNew = isNew; const page = editorPage(isNew, presetCategory); const prefix = type === 'code' ? 'code' : 'visual';
   $(`#${prefix}-editor-heading`).textContent = isNew ? 'Crear página' : type === 'code' ? 'Editar código' : 'Editar página';
+  $(`#${prefix}-delete-page`).hidden = isNew;
   $(`#${prefix}-page-title`).value = page.title; $(`#${prefix}-page-category`).value = page.category; $(`#${prefix}-page-summary`).value = page.summary || '';
   updateParentOptions(prefix, isNew ? presetParent : page.parent || '');
   if (type === 'code') { $('#code-page-content').value = page.content; updateCodePreview(); }
@@ -113,12 +114,42 @@ async function save(type) {
   await json(api, { method:'PUT', headers:{'content-type':'application/json', authorization:`Bearer ${state.token}`}, body:JSON.stringify({ slug, content, manifest }) });
   state.manifest = manifest; renderNavigation(); $(`#${prefix}-editor-dialog`).close(); location.hash = slug; await loadPage(slug);
 }
+async function deletePage(type) {
+  if (!state.token || state.isNew || !state.current) return;
+  const page = state.current;
+  const directChildren = state.manifest.pages.filter(item => item.parent === page.slug).length;
+  const childNotice = directChildren ? ` Sus ${directChildren} subpágina(s) directa(s) se conservarán como páginas principales.` : '';
+  if (!window.confirm(`¿Eliminar la página «${page.title}»? Esta acción no se puede deshacer.${childNotice}`)) return;
+  const pages = state.manifest.pages
+    .filter(item => item.slug !== page.slug)
+    .map(item => {
+      if (item.parent !== page.slug) return item;
+      const promoted = { ...item };
+      delete promoted.parent;
+      return promoted;
+    });
+  if (!pages.length) throw new Error('No se puede eliminar la última página de la wiki.');
+  const manifest = { ...state.manifest, pages };
+  await json(api, {
+    method: 'DELETE',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${state.token}` },
+    body: JSON.stringify({ slug: page.slug, manifest })
+  });
+  state.manifest = manifest;
+  renderNavigation();
+  $(`#${type}-editor-dialog`).close();
+  const destination = pages.find(item => item.slug === 'inicio')?.slug || pages[0].slug;
+  location.hash = destination;
+  await loadPage(destination);
+}
 
 $('#login-form').addEventListener('submit', async event => { event.preventDefault(); try { const data = await json('/api/auth', {method:'POST', body:JSON.stringify({username:$('#username').value, password:$('#password').value})}); state.token = data.token; sessionStorage.setItem('wiki-admin-token', data.token); $('#auth-dialog').close(); event.target.reset(); refreshSession(); loadPage(state.current.slug); } catch (error) { $('#login-error').textContent = error.message; } });
 $('#new-page').addEventListener('click', () => openEditor('visual', true));
 window.openWikiEditor = (category = '') => openEditor('visual', true, category);
 $('#code-editor-form').addEventListener('submit', async event => { event.preventDefault(); try { await save('code'); } catch (error) { $('#code-editor-error').textContent = error.message; } });
 $('#visual-editor-form').addEventListener('submit', async event => { event.preventDefault(); try { await save('visual'); } catch (error) { $('#visual-editor-error').textContent = error.message; } });
+$('#code-delete-page').addEventListener('click', async () => { try { await deletePage('code'); } catch (error) { $('#code-editor-error').textContent = error.message; } });
+$('#visual-delete-page').addEventListener('click', async () => { try { await deletePage('visual'); } catch (error) { $('#visual-editor-error').textContent = error.message; } });
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(`#${button.dataset.close}`).close()));
 document.querySelectorAll('.editor-toolbar button').forEach(button => button.addEventListener('click', () => { $('#visual-page-content').focus(); if (button.dataset.command === 'link') { const url = prompt('Dirección del enlace:'); if (url) document.execCommand('createLink', false, url); } else if (button.dataset.block) document.execCommand('formatBlock', false, button.dataset.block); else document.execCommand(button.dataset.command, false); }));
 function updateCodePreview() { $('#code-preview').innerHTML = markdown(bodyMarkdown($('#code-page-content').value)); }
@@ -130,7 +161,7 @@ setTheme(localStorage.getItem('wiki-theme') || 'light');
 document.querySelector('.brand').addEventListener('click', event => { event.preventDefault(); location.hash = 'inicio'; loadPage('inicio'); });
 document.querySelectorAll('.site-links a').forEach(link => link.addEventListener('click', event => { event.preventDefault(); const slug = link.getAttribute('href').slice(1); location.hash = slug; loadPage(slug); }));
 $('#search-form').addEventListener('submit', event => { event.preventDefault(); const query = $('#search-input').value.trim().toLowerCase(); const page = state.manifest.pages.find(item => item.title.toLowerCase().includes(query)); if (page) { location.hash = page.slug; loadPage(page.slug); } });
-async function init() { const base = await json('content/manifest.json'); state.manifest = base; try { const remote = (await json(`${api}?type=manifest`)).manifest; if (remote.pages?.length) { const pages = new Map(base.pages.map(page => [page.slug, page])); remote.pages.forEach(page => pages.set(page.slug, page)); state.manifest = { pages:[...pages.values()], categories:[...new Set([...base.categories, ...remote.categories])] }; } } catch {} renderNavigation(); refreshSession(); loadPage(location.hash.slice(1) || 'inicio'); }
+async function init() { const base = await json('content/manifest.json'); state.manifest = base; try { const remote = (await json(`${api}?type=manifest`)).manifest; if (remote.pages?.length) state.manifest = { pages:remote.pages, categories:[...new Set([...base.categories, ...remote.categories])] }; } catch {} renderNavigation(); refreshSession(); loadPage(location.hash.slice(1) || 'inicio'); }
 // Markdown enriquecido: tablas, imágenes, enlaces y listas numeradas.
 function inlineMarkdown(source = '') {
   return source
