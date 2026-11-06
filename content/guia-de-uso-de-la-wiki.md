@@ -4,7 +4,7 @@ Bienvenido a la Wiki Vermell. Esta guía explica paso a paso cómo leerla, cómo
 
 ## Antes de empezar
 
-La wiki está pensada para consultar información. **Las páginas se pueden leer sin iniciar sesión.** Solo hace falta una cuenta de administrador para crear o cambiar contenido.
+La wiki está pensada para consultar información. **La mayoría de páginas se pueden leer sin iniciar sesión.** Las que tengan marcada la opción **Solo administradores** requieren iniciar sesión. Solo una cuenta de administrador permite crear, cambiar o eliminar contenido.
 
 ## Para cualquier persona: consultar la wiki
 
@@ -35,6 +35,8 @@ En el panel **Apariencia** puedes elegir:
 - Un color de acento para los enlaces y controles.
 
 Estos ajustes solo cambian cómo ves la wiki en tu navegador y se guardan en ese navegador; no modifican ninguna página.
+
+En un teléfono o una pantalla estrecha, pulsa **Explorar** o **Apariencia** en la cabecera para abrir esos paneles. Al desplazarte hacia abajo por una página larga, aparece una flecha fija en la esquina inferior derecha; púlsala para volver al inicio.
 
 ## Para administradores
 
@@ -91,6 +93,20 @@ Al cambiar la categoría, la página aparecerá al final de la nueva categoría;
 
 Si eliges una **Página superior**, la página aparecerá como subpágina en el menú lateral, pero no se insertará automáticamente en el contenido de su página superior. Para enlazarla en el punto que quieras, escribe el enlace en el editor de código o selecciona texto en el editor visual y usa **Enlace**.
 
+### Restringir una página a administradores
+
+Al crear o editar una página, marca **Solo administradores (requiere iniciar sesión)** para exigir una sesión de administrador antes de mostrar su contenido, historial o archivos adjuntos. Desmarca la opción para volver a hacerla accesible sin iniciar sesión. El título puede seguir apareciendo en la navegación; ocultar una página de la navegación no es lo mismo que restringir el acceso.
+
+Esta opción controla el acceso desde la wiki. Si el repositorio de GitHub es público, sus archivos pueden seguir consultándose directamente en GitHub. Usa un repositorio privado si el contenido debe ser confidencial.
+
+### Adjuntar un PDF
+
+1. Abre una página ya publicada y pulsa **Editar** o **Editar código**.
+2. En **Adjuntar PDF**, elige un archivo PDF de hasta 4 MB y pulsa **Adjuntar a esta página**.
+3. La wiki inserta un enlace al archivo en el contenido. Pulsa **Publicar cambios** para guardar el enlace junto con la página.
+
+Los PDF se guardan en el repositorio y se descargan desde la página. Se aplica al archivo la misma restricción de acceso que a su página. En repositorios públicos, el archivo también puede estar disponible directamente desde GitHub.
+
 ### Editar solo un apartado
 
 Si una página tiene apartados, puede aparecer un enlace **editar** junto a cada título. Haz clic para abrir ese apartado, cambia solo lo necesario y pulsa **Guardar sección**. Así no tienes que abrir y modificar todo el artículo.
@@ -112,6 +128,8 @@ Si una página tiene apartados, puede aparecer un enlace **editar** junto a cada
 
 - **Enlace**: enlazar texto a una dirección web.
 
+- **Colores**: aplicar al texto seleccionado uno de los colores predeterminados que aparecen como una A coloreada.
+
 - **Tabla**, **Imagen** y **Desplegable**: insertar esos elementos.
 
 1. Para una tabla, indica el número de columnas y filas y luego sustituye los textos de ejemplo. Tanto al editar la página completa como al editar una sección, haz clic en una celda y usa **+ Fila**, **− Fila**, **+ Columna** o **− Columna** en la barra. La fila de cabecera se conserva; para quitar una fila, selecciona una celda de esa fila. No se puede eliminar la última columna.
@@ -124,7 +142,7 @@ El editor de código permite escribir Markdown. Muestra una vista previa a la de
 
 En el editor visual también puedes seleccionar el texto, pulsar **Enlace** e introducir `#slug` como dirección. Por ejemplo, `#tesoreria` abre la página **Tesorería**.
 
-Para anidar apartados en el índice de la página, usa niveles de título Markdown: `## Apartado`, `### Subapartado`, `#### Apartado de tercer nivel` y así hasta `######`. Cada nivel aparece más sangrado que el anterior. También puedes escribir `- Primer elemento` para crear una lista. Para poner negrita o cursiva, selecciona el texto en el editor visual y pulsa **B** o **I**.
+Para anidar apartados en el índice de la página, usa niveles de título Markdown: `## Apartado`, `### Subapartado`, `#### Apartado de tercer nivel` y así hasta `######`. Cada nivel aparece más sangrado que el anterior. También puedes escribir `- Primer elemento` para crear una lista. Para poner negrita, cursiva o color, selecciona el texto en el editor visual y pulsa **B**, **I** o el color deseado. En el editor de código puedes escribir un color predeterminado con la sintaxis `{{color:#d1242f|texto}}`; sustituye el código hexadecimal por el del color que quieras aplicar.
 
 Para una tabla sencilla, escribe estas líneas en el editor:
 
@@ -141,7 +159,7 @@ Cuando termines, revisa la vista previa y pulsa **Publicar cambios**. Si no est�
 - **No veo los botones de edición:** comprueba si has iniciado sesión. Si no, el navegador está en modo lectura.
 - **El guardado muestra un error de GitHub o Netlify:** no pulses publicar repetidamente. Copia el texto del error y envíaselo al responsable de la wiki; no incluyas contraseñas, tokens ni nada que pueda comprometer la seguridad.
 - **La página no aparece al instante:** espera a que la web termine el despliegue y vuelve a cargarla.
-- **He publicado un cambio incorrecto:** avisa al responsable. Los cambios se guardan en GitHub; la wiki no tiene un botón para deshacer ni para eliminar página.
+- **He publicado un cambio incorrecto:** abre **Historial** y, si eres administrador, restaura una versión anterior. Para quitar una página, usa **Eliminar página** en su editor; esta acción elimina la página y no se puede deshacer desde la wiki.
 
 Si se encuentra algún error fuera de los especificados o alguna mejor que se desee implementar, por favor, anótese en la página de [sugerencias y mejoras](#sugerencias-y-mejoras)
 
@@ -198,8 +216,8 @@ El `slug` solo puede contener letras minúsculas sin acentos, números y guiones
 
 ### Seguridad y límites conocidos
 
-- La lectura de páginas es pública; no uses la wiki como almacén de secretos ni des por privada la información publicada.
+- Las páginas sin restricción son públicas. Las páginas marcadas **Solo administradores** se protegen al consultarlas desde la wiki, pero usa un repositorio privado si sus archivos tampoco deben ser accesibles directamente en GitHub.
 - El token de GitHub solo debe existir como variable de entorno de la función. Nunca debe enviarse al navegador.
 - En desarrollo local, `admin` / `admin` es solo un valor de prueba si no se han definido credenciales.
-- No hay una función de eliminación de páginas ni un historial visual para restaurar versiones. GitHub conserva los commits para que un desarrollador autorizado pueda revisar y recuperar cambios.
+- La eliminación de una página no se puede deshacer desde la wiki. El historial permite restaurar versiones guardadas antes de editar, pero no sustituye una copia de seguridad.
 - Si el guardado falla, revisa el mensaje del editor y los registros de `wiki` en Netlify. No registres ni compartas el token.

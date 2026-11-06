@@ -4,6 +4,25 @@ const state = { manifest: { pages: [], categories: [] }, token: sessionStorage.g
 
 const escapeHtml = (value = '') => value.replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
 const slugify = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const editorColors = [
+  { name: 'Negro', value: '#202122' },
+  { name: 'Rojo', value: '#d1242f' },
+  { name: 'Naranja', value: '#bc4c00' },
+  { name: 'Amarillo', value: '#9a6700' },
+  { name: 'Verde', value: '#1a7f37' },
+  { name: 'Azul', value: '#0969da' },
+  { name: 'Morado', value: '#8250df' },
+  { name: 'Gris', value: '#6e7781' }
+];
+function normalizedEditorColor(color) {
+  const probe = document.createElement('span');
+  probe.style.color = color;
+  return probe.style.color.toLowerCase();
+}
+function matchingEditorColor(color) {
+  const normalized = normalizedEditorColor(color);
+  return editorColors.find(option => normalizedEditorColor(option.value) === normalized);
+}
 async function json(url, options) {
   const response = await fetch(url, options);
   const text = await response.text();
@@ -316,14 +335,57 @@ function refreshSession() {
   $('#login-button').onclick = () => { if (!state.token) return $('#auth-dialog').showModal(); sessionStorage.removeItem('wiki-admin-token'); state.token = null; refreshSession(); loadPage(state.current.slug); };
 }
 function pageActions() { return state.token ? '<div class="edit-actions"><button class="edit-button" id="visual-edit">Editar</button><button class="edit-button" id="code-edit">Editar código</button></div>' : ''; }
+function showAdminAccessRequired(page) {
+  $('#article').innerHTML = `<div class="article-inner"><header class="article-header"><div><div class="article-category">${escapeHtml(page.category || 'General')}</div><h1>${escapeHtml(page.title)}</h1></div></header><section class="admin-access-required"><p>Esta página está reservada a administradores. Inicia sesión para acceder a su contenido.</p><button type="button" class="primary" id="admin-access-login">Iniciar sesión</button></section></div>`;
+  $('#admin-access-login').addEventListener('click', () => $('#auth-dialog').showModal());
+}
+function setMobilePanel(panel = '') {
+  const exploreOpen = panel === 'explore';
+  const appearanceOpen = panel === 'appearance';
+  document.body.classList.toggle('mobile-explore-open', exploreOpen);
+  document.body.classList.toggle('mobile-appearance-open', appearanceOpen);
+  $('#mobile-explore-toggle').setAttribute('aria-expanded', String(exploreOpen));
+  $('#mobile-appearance-toggle').setAttribute('aria-expanded', String(appearanceOpen));
+}
+function toggleMobilePanel(panel) {
+  const isOpen = document.body.classList.contains(`mobile-${panel}-open`);
+  setMobilePanel(isOpen ? '' : panel);
+}
 async function loadPage(requestedSlug) {
   const page = state.manifest.pages.find(item => item.slug === requestedSlug) || state.manifest.pages.find(item => item.slug === 'inicio') || state.manifest.pages[0];
   if (!page) return;
+  setMobilePanel();
   state.current = { ...page };
   document.querySelectorAll('.page-link').forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${page.slug}`));
+  if (page.adminOnly && !state.token) {
+    showAdminAccessRequired(page);
+    return;
+  }
   $('#article').innerHTML = '<div class="loading">Cargando página…</div>';
-  try { state.current.content = (await json(`${api}?slug=${encodeURIComponent(page.slug)}`)).content; }
-  catch { state.current.content = await (await fetch(`content/${page.slug}.md`)).text(); }
+  try {
+    const headers = page.adminOnly ? { authorization: `Bearer ${state.token}` } : {};
+    state.current.content = (await json(`${api}?slug=${encodeURIComponent(page.slug)}`, { headers })).content;
+  } catch (error) {
+    if (page.adminOnly) {
+      if (error.status === 401) {
+        sessionStorage.removeItem('wiki-admin-token');
+        state.token = null;
+        refreshSession();
+        showAdminAccessRequired(page);
+      } else {
+        $('#article').innerHTML = `<div class="article-inner"><p class="error" role="alert">${escapeHtml(error.message)}</p></div>`;
+      }
+      return;
+    }
+    try {
+      const fallback = await fetch(`content/${page.slug}.md`);
+      if (!fallback.ok) throw error;
+      state.current.content = await fallback.text();
+    } catch (fallbackError) {
+      $('#article').innerHTML = `<div class="article-inner"><p class="error" role="alert">${escapeHtml(error.message || fallbackError.message)}</p></div>`;
+      return;
+    }
+  }
   $('#article').innerHTML = `<div class="article-inner"><header class="article-header"><div><div class="article-category">${escapeHtml(page.category || 'General')}</div><h1>${escapeHtml(page.title)}</h1></div>${pageActions()}</header><div class="article-body">${markdown(bodyMarkdown(state.current.content))}</div><div class="page-history-actions"><button type="button" id="page-history-button">Historial</button></div></div>`;
   if (state.token) { const childButton = document.createElement('button'); childButton.className = 'edit-button'; childButton.textContent = 'Crear subpágina'; childButton.addEventListener('click', () => openEditor('visual', true, state.current.category, state.current.slug)); $('.edit-actions').prepend(childButton); }
   renderPageToc(); renderSectionEditLinks();
@@ -346,7 +408,8 @@ async function openPageHistory() {
   list.append(loading);
   dialog.showModal();
   try {
-    const data = await json(`${api}?history=${encodeURIComponent(page.slug)}`);
+    const headers = page.adminOnly ? { authorization: `Bearer ${state.token}` } : {};
+    const data = await json(`${api}?history=${encodeURIComponent(page.slug)}`, { headers });
     if (!Array.isArray(data.revisions) || data.revisions.some(revision =>
       !revision || typeof revision.timestamp !== 'string' || !Number.isFinite(Date.parse(revision.timestamp)) ||
       typeof revision.title !== 'string' || typeof revision.content !== 'string')) {
@@ -424,8 +487,12 @@ function openEditor(type, isNew, presetCategory = '', presetParent = '') {
   if (!state.token) return; state.isNew = isNew; const page = editorPage(isNew, presetCategory); const prefix = type === 'code' ? 'code' : 'visual';
   $(`#${prefix}-editor-heading`).textContent = isNew ? 'Crear página' : type === 'code' ? 'Editar código' : 'Editar página';
   $(`#${prefix}-delete-page`).hidden = isNew;
+  $(`#${prefix}-attachment-upload`).hidden = isNew;
+  $(`#${prefix}-attachment-file`).value = '';
+  $(`#${prefix}-attachment-error`).textContent = '';
   $(`#${prefix}-page-title`).value = page.title; $(`#${prefix}-page-category`).value = page.category; $(`#${prefix}-page-summary`).value = page.summary || '';
   $(`#${prefix}-page-hidden`).checked = Boolean(page.hidden);
+  $(`#${prefix}-page-admin-only`).checked = Boolean(page.adminOnly);
   updateParentOptions(prefix, isNew ? presetParent : page.parent || '');
   updatePageOrder(prefix, page, isNew);
   if (type === 'code') { $('#code-page-content').value = page.content; updateCodePreview(); }
@@ -444,7 +511,7 @@ async function save(type) {
   if (!Number.isInteger(position) || position < 1 || position > Number(orderInput.max)) {
     throw new Error(`Indica una posición entre 1 y ${orderInput.max}.`);
   }
-  const page = { slug, title, category, summary: $(`#${prefix}-page-summary`).value.trim(), ...($(`#${prefix}-page-hidden`).checked ? { hidden: true } : {}), ...(parent ? { parent } : {}) };
+  const page = { slug, title, category, summary: $(`#${prefix}-page-summary`).value.trim(), ...($(`#${prefix}-page-hidden`).checked ? { hidden: true } : {}), ...($(`#${prefix}-page-admin-only`).checked ? { adminOnly: true } : {}), ...(parent ? { parent } : {}) };
   const pages = normalizePageOrders(state.manifest.pages.filter(item => item.slug !== slug), page, position);
   const manifest = { ...state.manifest, pages, categories: [...new Set([...state.manifest.categories, category])] };
   await json(api, { method:'PUT', headers:{'content-type':'application/json', authorization:`Bearer ${state.token}`}, body:JSON.stringify({ slug, content, manifest }) });
@@ -479,6 +546,59 @@ async function deletePage(type) {
   await loadPage(destination);
 }
 
+function bytesToBase64(bytes) {
+  let binary = '';
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  }
+  return btoa(binary);
+}
+async function uploadPdf(type) {
+  const prefix = type === 'code' ? 'code' : 'visual';
+  const input = $(`#${prefix}-attachment-file`);
+  const error = $(`#${prefix}-attachment-error`);
+  const button = $(`#${prefix}-attachment-button`);
+  const file = input.files[0];
+  if (!file || !state.current || state.isNew) return;
+  error.textContent = '';
+  if (!/\.pdf$/i.test(file.name) || file.size > 4 * 1024 * 1024) {
+    error.textContent = 'El archivo debe ser un PDF de hasta 4 MB.';
+    return;
+  }
+  button.disabled = true;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (new TextDecoder().decode(bytes.subarray(0, 5)) !== '%PDF-') {
+      throw new Error('El archivo seleccionado no parece ser un PDF válido.');
+    }
+    const result = await json(`${api}?attachment=upload`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${state.token}` },
+      body: JSON.stringify({ slug: state.current.slug, filename: file.name, contentBase64: bytesToBase64(bytes) })
+    });
+    const linkText = file.name.replace(/[\[\]]/g, '');
+    const link = `[${linkText}](attachment:${result.filename})`;
+    if (type === 'code') {
+      const textarea = $('#code-page-content');
+      const separator = textarea.value.endsWith('\n') ? '\n' : '\n\n';
+      textarea.setRangeText(`${separator}${link}\n`, textarea.selectionStart, textarea.selectionEnd, 'end');
+      updateCodePreview();
+    } else {
+      const paragraph = document.createElement('p');
+      const anchor = document.createElement('a');
+      anchor.href = `attachment:${result.filename}`;
+      anchor.textContent = linkText;
+      paragraph.append(anchor);
+      $('#visual-page-content').append(paragraph);
+    }
+    input.value = '';
+  } catch (uploadError) {
+    error.textContent = uploadError.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 $('#login-form').addEventListener('submit', async event => { event.preventDefault(); try { const data = await json('/api/auth', {method:'POST', body:JSON.stringify({username:$('#username').value, password:$('#password').value})}); state.token = data.token; sessionStorage.setItem('wiki-admin-token', data.token); $('#auth-dialog').close(); event.target.reset(); refreshSession(); loadPage(state.current.slug); } catch (error) { $('#login-error').textContent = error.message; } });
 $('#new-page').addEventListener('click', () => openEditor('visual', true));
 $('#manage-categories').addEventListener('click', () => { $('#category-manager-error').textContent = ''; renderCategoryManager(); $('#category-manager-dialog').showModal(); });
@@ -489,12 +609,36 @@ $('#code-editor-form').addEventListener('submit', async event => { event.prevent
 $('#visual-editor-form').addEventListener('submit', async event => { event.preventDefault(); try { await save('visual'); } catch (error) { $('#visual-editor-error').textContent = error.message; } });
 $('#code-delete-page').addEventListener('click', async () => { try { await deletePage('code'); } catch (error) { $('#code-editor-error').textContent = error.message; } });
 $('#visual-delete-page').addEventListener('click', async () => { try { await deletePage('visual'); } catch (error) { $('#visual-editor-error').textContent = error.message; } });
+$('#code-attachment-button').addEventListener('click', () => uploadPdf('code'));
+$('#visual-attachment-button').addEventListener('click', () => uploadPdf('visual'));
+$('#mobile-explore-toggle').addEventListener('click', () => toggleMobilePanel('explore'));
+$('#mobile-appearance-toggle').addEventListener('click', () => toggleMobilePanel('appearance'));
+const backToTopButton = $('#back-to-top');
+function updateBackToTopVisibility() {
+  backToTopButton.hidden = window.scrollY < 450;
+}
+window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+backToTopButton.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'auto' });
+});
+updateBackToTopVisibility();
+document.addEventListener('click', event => {
+  if (!document.body.classList.contains('mobile-explore-open') && !document.body.classList.contains('mobile-appearance-open')) return;
+  if (event.target.closest('#sidebar, #appearance-panel, #mobile-explore-toggle, #mobile-appearance-toggle')) return;
+  setMobilePanel();
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') setMobilePanel();
+});
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 700) setMobilePanel();
+});
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(`#${button.dataset.close}`).close()));
 document.querySelectorAll('.editor-toolbar button').forEach(button => button.addEventListener('click', () => { $('#visual-page-content').focus(); if (button.dataset.command === 'link') { const url = prompt('Dirección del enlace (para una página de la wiki, usa #slug):'); if (url) document.execCommand('createLink', false, url); } else if (button.dataset.block) document.execCommand('formatBlock', false, button.dataset.block); else document.execCommand(button.dataset.command, false); }));
 function updateCodePreview() { $('#code-preview').innerHTML = markdown(bodyMarkdown($('#code-page-content').value)); }
 $('#code-page-content').addEventListener('input', updateCodePreview);
-document.querySelectorAll('.font-choice').forEach(button => button.addEventListener('click', () => { document.body.classList.toggle('font-large', button.dataset.size === 'large'); document.querySelectorAll('.font-choice').forEach(item => item.classList.toggle('active', item === button)); }));
-function setTheme(theme) { document.body.classList.toggle('dark', theme === 'dark'); localStorage.setItem('wiki-theme', theme); document.querySelectorAll('.theme-choice').forEach(button => button.classList.toggle('active', button.dataset.theme === theme)); }
+document.querySelectorAll('.font-choice').forEach(button => button.addEventListener('click', () => { document.body.classList.toggle('font-large', button.dataset.size === 'large'); document.querySelectorAll('.font-choice').forEach(item => item.classList.toggle('active', item === button)); setMobilePanel(); }));
+function setTheme(theme) { document.body.classList.toggle('dark', theme === 'dark'); localStorage.setItem('wiki-theme', theme); document.querySelectorAll('.theme-choice').forEach(button => button.classList.toggle('active', button.dataset.theme === theme)); setMobilePanel(); }
 document.querySelectorAll('.theme-choice').forEach(button => button.addEventListener('click', () => setTheme(button.dataset.theme)));
 setTheme(localStorage.getItem('wiki-theme') || 'light');
 function setAppearanceChoice(selector, datasetKey, value, storageKey, attribute) {
@@ -512,6 +656,7 @@ function setAppearanceChoice(selector, datasetKey, value, storageKey, attribute)
 document.querySelectorAll('.width-choice').forEach(button => button.addEventListener('click', () => setAppearanceChoice('.width-choice', 'width', button.dataset.width, 'wiki-reading-width', 'readingWidth')));
 document.querySelectorAll('.spacing-choice').forEach(button => button.addEventListener('click', () => setAppearanceChoice('.spacing-choice', 'spacing', button.dataset.spacing, 'wiki-line-spacing', 'lineSpacing')));
 document.querySelectorAll('.accent-choice').forEach(button => button.addEventListener('click', () => setAppearanceChoice('.accent-choice', 'accent', button.dataset.accent, 'wiki-accent-color', 'accentColor')));
+document.querySelectorAll('.width-choice, .spacing-choice, .accent-choice').forEach(button => button.addEventListener('click', () => setMobilePanel()));
 setAppearanceChoice('.width-choice', 'width', localStorage.getItem('wiki-reading-width'), 'wiki-reading-width', 'readingWidth');
 setAppearanceChoice('.spacing-choice', 'spacing', localStorage.getItem('wiki-line-spacing'), 'wiki-line-spacing', 'lineSpacing');
 setAppearanceChoice('.accent-choice', 'accent', localStorage.getItem('wiki-accent-color'), 'wiki-accent-color', 'accentColor');
@@ -519,6 +664,12 @@ document.querySelector('.brand').addEventListener('click', event => { event.prev
 document.querySelectorAll('.site-links a').forEach(link => link.addEventListener('click', event => { event.preventDefault(); const slug = link.getAttribute('href').slice(1); location.hash = slug; loadPage(slug); }));
 $('#search-form').addEventListener('submit', event => { event.preventDefault(); const query = $('#search-input').value.trim().toLowerCase(); const page = state.manifest.pages.find(item => item.title.toLowerCase().includes(query)); if (page) { location.hash = page.slug; loadPage(page.slug); } });
 $('#article').addEventListener('click', event => {
+  const attachmentLink = event.target.closest('.article-body a[href^="attachment:"]');
+  if (attachmentLink) {
+    event.preventDefault();
+    downloadAttachment(attachmentLink);
+    return;
+  }
   const link = event.target.closest('.article-body a[href^="#"]');
   if (!link) return;
   const slug = link.getAttribute('href').slice(1);
@@ -527,15 +678,51 @@ $('#article').addEventListener('click', event => {
   location.hash = slug;
   loadPage(slug);
 });
+async function downloadAttachment(link) {
+  try {
+    const filename = link.getAttribute('href').slice('attachment:'.length);
+    const response = await fetch(`${api}?slug=${encodeURIComponent(state.current.slug)}&attachment=${encodeURIComponent(filename)}`, {
+      headers: state.current.adminOnly ? { authorization: `Bearer ${state.token}` } : {}
+    });
+    if (response.status === 401) {
+      sessionStorage.removeItem('wiki-admin-token');
+      state.token = null;
+      refreshSession();
+      await loadPage(state.current.slug);
+      return;
+    }
+    if (!response.ok) throw new Error(`No se pudo descargar el PDF (error ${response.status}).`);
+    const url = URL.createObjectURL(await response.blob());
+    const download = document.createElement('a');
+    download.href = url;
+    download.download = link.textContent.trim() || 'documento.pdf';
+    document.body.append(download);
+    download.click();
+    download.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    window.alert(error.message);
+  }
+}
 async function init() { const base = await json('content/manifest.json'); state.manifest = base; try { const remote = (await json(`${api}?type=manifest`)).manifest; if (remote.pages?.length) state.manifest = { ...base, pages:remote.pages, categories:Array.isArray(remote.categories) ? remote.categories : base.categories, hiddenCategories:Array.isArray(remote.hiddenCategories) ? remote.hiddenCategories : [] }; } catch {} renderNavigation(); refreshSession(); loadPage(location.hash.slice(1) || 'inicio'); }
 // Markdown enriquecido: tablas, imágenes, enlaces y listas numeradas.
 function inlineMarkdown(source = '') {
   return source
     .replace(/!\[([^\]]*)\]\(([^\s)]+)\)/g, '<img src="$2" alt="$1">')
-    .replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (_, text, href) => href.startsWith('#') ? `<a href="${href}">${text}</a>` : `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`)
+    .replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (_, text, href) => {
+      if (href.startsWith('#')) return `<a href="${href}">${text}</a>`;
+      if (href.startsWith('attachment:') && /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}\.pdf$/i.test(href.slice('attachment:'.length)) && state.current?.slug) {
+        return `<a href="${href}">${text}</a>`;
+      }
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    })
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>');
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/\{\{color:(#[0-9a-f]{6})\|([\s\S]+?)\}\}/gi, (match, color, text) => {
+      const preset = matchingEditorColor(color);
+      return preset ? `<span style="color:${preset.value}">${text}</span>` : match;
+    });
 }
 function markdownTable(lines, widths = []) {
   const cells = line => line.trim().replace(/^\||\|$/g, '').split('|').map(cell => inlineMarkdown(cell.trim()));
@@ -563,6 +750,10 @@ function htmlToMarkdown(html) {
   const walk = node => {
     if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
     const content = [...node.childNodes].map(walk).join(''); const tag = node.nodeName.toLowerCase();
+    if (tag === 'span' || tag === 'font') {
+      const preset = matchingEditorColor(tag === 'span' ? node.style.color : node.getAttribute('color') || '');
+      if (preset) return `{{color:${preset.value}|${content}}}`;
+    }
     if (tag === 'h2') return `\n\n## ${content.trim()}\n\n`;
     if (tag === 'h3') return `\n\n### ${content.trim()}\n\n`;
     if (tag === 'strong' || tag === 'b') return `**${content}**`;
@@ -607,6 +798,23 @@ function setActiveEditorSurface(root, tableToolbar) {
   activeEditorRoot = root;
   activeEditorToolbar = tableToolbar;
   setActiveEditorCell(null);
+}
+function addEditorColorControls(root, toolbar) {
+  const controls = document.createElement('span');
+  controls.className = 'editor-color-actions';
+  controls.setAttribute('role', 'group');
+  controls.setAttribute('aria-label', 'Color de texto');
+  controls.innerHTML = editorColors.map(({ name, value }) =>
+    `<button type="button" class="editor-color-swatch" data-editor-color="${value}" style="--editor-color:${value}" title="${name}" aria-label="Color de texto: ${name.toLowerCase()}"><span aria-hidden="true">A</span></button>`
+  ).join('');
+  toolbar.append(controls);
+  controls.querySelectorAll('[data-editor-color]').forEach(button => {
+    button.addEventListener('mousedown', event => event.preventDefault());
+    button.addEventListener('click', () => {
+      root.focus();
+      document.execCommand('foreColor', false, button.dataset.editorColor);
+    });
+  });
 }
 function setActiveEditorCell(cell) {
   const table = cell?.closest('table') || null;
@@ -803,6 +1011,7 @@ toolbar.querySelectorAll('[data-table-action]').forEach(button => {
   button.addEventListener('click', () => changeTableStructure(button.dataset.tableAction));
 });
 setActiveEditorSurface($('#visual-page-content'), toolbar);
+addEditorColorControls($('#visual-page-content'), toolbar);
 $('#visual-page-content').addEventListener('click', event => setActiveEditorCell(event.target.closest('td, th')));
 $('#visual-page-content').addEventListener('keyup', () => {
   const selection = window.getSelection();
@@ -860,7 +1069,9 @@ function openSectionEditor(heading) {
   const originalNodes = getSectionNodes(heading); const section = document.createElement('div'); originalNodes.forEach(node => section.append(node.cloneNode(true))); section.querySelectorAll('.section-edit').forEach(link => link.remove());
   const dialog = document.createElement('dialog'); dialog.className = 'section-editor-dialog'; dialog.innerHTML = `<form method="dialog"><button type="button" class="close" aria-label="Cerrar">×</button><header><h2>Editar sección</h2><p>Los cambios se aplicarán solo a esta sección.</p></header><div class="section-editor-toolbar"><button type="button" data-command="bold"><b>B</b></button><button type="button" data-command="italic"><i>I</i></button><button type="button" data-command="insertUnorderedList">Lista</button><button type="button" data-command="link">Enlace</button><span class="table-edit-actions" aria-label="Edición de tabla"><button type="button" data-table-action="add-row" disabled title="Añadir una fila debajo de la seleccionada">+ Fila</button><button type="button" data-table-action="remove-row" disabled title="Eliminar la fila de contenido seleccionada">− Fila</button><button type="button" data-table-action="add-column" disabled title="Añadir una columna a la derecha de la seleccionada">+ Columna</button><button type="button" data-table-action="remove-column" disabled title="Eliminar la columna seleccionada">− Columna</button></span></div><div class="section-editor-content" contenteditable="true" spellcheck="true"></div><p class="error"></p><div class="editor-actions"><button type="button" class="secondary" data-cancel>Cancelar</button><button class="primary" value="save">Guardar sección</button></div></form>`;
   const content = dialog.querySelector('.section-editor-content'); content.innerHTML = section.innerHTML; content.querySelectorAll('table').forEach(makeTableResizable); document.body.append(dialog); dialog.showModal();
-  setActiveEditorSurface(content, dialog.querySelector('.section-editor-toolbar'));
+  const sectionToolbar = dialog.querySelector('.section-editor-toolbar');
+  setActiveEditorSurface(content, sectionToolbar);
+  addEditorColorControls(content, sectionToolbar);
   const close = () => { dialog.close(); dialog.remove(); setActiveEditorSurface(null, null); }; dialog.querySelector('.close').addEventListener('click', close); dialog.querySelector('[data-cancel]').addEventListener('click', close);
   dialog.querySelectorAll('[data-command]').forEach(button => { button.addEventListener('mousedown', event => event.preventDefault()); button.addEventListener('click', () => { content.focus(); if (button.dataset.command === 'link') { const url = prompt('Dirección del enlace (para una página de la wiki, usa #slug):'); if (url) document.execCommand('createLink', false, url); } else document.execCommand(button.dataset.command, false); }); });
   dialog.querySelectorAll('[data-table-action]').forEach(button => {

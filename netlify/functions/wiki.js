@@ -14,7 +14,10 @@ function admin(event, secret) {
   const given = Buffer.from(sig);
   const wanted = Buffer.from(expected);
   if (given.length !== wanted.length || !crypto.timingSafeEqual(given, wanted)) return false;
-  try { return JSON.parse(Buffer.from(payload, 'base64url')).exp > Date.now(); }
+  try {
+    const claims = JSON.parse(Buffer.from(payload, 'base64url'));
+    return claims.role === 'admin' && claims.exp > Date.now();
+  }
   catch { return false; }
 }
 
@@ -33,6 +36,25 @@ function githubConfig() {
     throw new Error(`Netlify no está proporcionando a esta función: ${missing.join(', ')}. Comprueba el alcance Functions y el contexto del deploy.`);
   }
   return { token: token.trim(), owner: owner.trim(), repo: repo.trim(), branch: branch.trim() };
+}
+
+function pdfResponse(base64, filename) {
+  return {
+    statusCode: 200,
+    isBase64Encoded: true,
+    headers: {
+      'content-type': 'application/pdf',
+      'content-disposition': `attachment; filename="${filename}"`,
+      'cache-control': 'no-store'
+    },
+    body: base64
+  };
+}
+
+function storedAttachmentName(filename) {
+  const base = filename.replace(/\.pdf$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'documento';
+  return `${base}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.pdf`;
 }
 
 function repositoryUrl(config, path) {
@@ -71,21 +93,49 @@ async function readFile(config, filePath) {
   return Buffer.from(result.content.replace(/\s/g, ''), 'base64').toString('utf8');
 }
 
+async function readBinaryFile(config, filePath) {
+  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/');
+  const file = await githubRequest(config, `contents/${encodedPath}?ref=${encodeURIComponent(config.branch)}`);
+  if (typeof file.sha !== 'string') throw new Error('GitHub no devolvió el identificador del PDF.');
+  const blob = await githubRequest(config, `git/blobs/${encodeURIComponent(file.sha)}`);
+  if (blob.encoding !== 'base64' || typeof blob.content !== 'string') {
+    throw new Error('GitHub no devolvió el PDF en formato base64.');
+  }
+  return blob.content.replace(/\s/g, '');
+}
+
+async function authorizePageRead(event, config, slug) {
+  const manifest = JSON.parse(await readFile(config, 'content/manifest.json'));
+  const page = manifest.pages.find(item => item.slug === slug);
+  if (!page) return response(404, { error: 'La página no existe' });
+  if (!page.adminOnly) return null;
+  const secret = process.env.WIKI_SESSION_SECRET;
+  if (!secret) return response(500, { error: 'Falta configurar WIKI_SESSION_SECRET en Netlify' });
+  if (!admin(event, secret)) return response(401, { error: 'Se requiere una sesión de administrador para ver esta página' });
+  return null;
+}
+
 async function commitFiles(config, files, message) {
   const branch = encodeURIComponent(config.branch);
   const reference = await githubRequest(config, `git/ref/heads/${branch}`);
   const parentSha = reference.object.sha;
   const parentCommit = await githubRequest(config, `git/commits/${parentSha}`);
+  const treeEntries = await Promise.all(files.map(async file => {
+    if (file.delete) return { path: file.path, mode: '100644', type: 'blob', sha: null };
+    if (file.encoding === 'base64') {
+      const blob = await githubRequest(config, 'git/blobs', {
+        method: 'POST',
+        body: JSON.stringify({ content: file.content, encoding: 'base64' })
+      });
+      return { path: file.path, mode: '100644', type: 'blob', sha: blob.sha };
+    }
+    return { path: file.path, mode: '100644', type: 'blob', content: file.content };
+  }));
   const tree = await githubRequest(config, 'git/trees', {
     method: 'POST',
     body: JSON.stringify({
       base_tree: parentCommit.tree.sha,
-      tree: files.map(file => ({
-        path: file.path,
-        mode: '100644',
-        type: 'blob',
-        ...(file.delete ? { sha: null } : { content: file.content })
-      }))
+      tree: treeEntries
     })
   });
   const commit = await githubRequest(config, 'git/commits', {
@@ -113,8 +163,11 @@ function githubError(error) {
 
 exports.handler = async event => {
   const query = event.queryStringParameters || {};
-  if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT' && event.httpMethod !== 'PATCH' && event.httpMethod !== 'DELETE') {
+  if (event.httpMethod !== 'GET' && event.httpMethod !== 'PUT' && event.httpMethod !== 'PATCH' && event.httpMethod !== 'DELETE' && event.httpMethod !== 'POST') {
     return response(405, { error: 'Método no permitido' });
+  }
+  if (event.httpMethod === 'POST' && query.attachment !== 'upload') {
+    return response(400, { error: 'Solicitud inválida' });
   }
 
   if (event.httpMethod !== 'GET') {
@@ -140,6 +193,8 @@ exports.handler = async event => {
       }
       if (query.history !== undefined) {
         if (!/^[a-z0-9-]+$/.test(query.history || '')) return response(400, { error: 'Falta una página válida' });
+        const accessError = await authorizePageRead(event, config, query.history);
+        if (accessError) return accessError;
         try {
           const history = JSON.parse(await readFile(config, `content/history/${query.history}.json`));
           if (!history || !Array.isArray(history.revisions)) throw new Error('El historial de la página no tiene un formato válido.');
@@ -149,7 +204,26 @@ exports.handler = async event => {
           throw error;
         }
       }
+      if (query.attachment !== undefined) {
+        if (!/^[a-z0-9-]+$/.test(query.slug || '') ||
+            !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}\.pdf$/i.test(query.attachment || '')) {
+          return response(400, { error: 'Falta un adjunto PDF válido' });
+        }
+        const accessError = await authorizePageRead(event, config, query.slug);
+        if (accessError) return accessError;
+        try {
+          return pdfResponse(
+            await readBinaryFile(config, `content/attachments/${query.slug}/${query.attachment}`),
+            query.attachment
+          );
+        } catch (error) {
+          if (error.status === 404) return response(404, { error: 'No existe ese PDF' });
+          throw error;
+        }
+      }
       if (!/^[a-z0-9-]+$/.test(query.slug || '')) return response(400, { error: 'Falta una página válida' });
+      const accessError = await authorizePageRead(event, config, query.slug);
+      if (accessError) return accessError;
       try {
         return response(200, { content: await readFile(config, `content/${query.slug}.md`) });
       } catch (error) {
@@ -163,6 +237,30 @@ exports.handler = async event => {
     catch { return response(400, { error: 'La solicitud contiene JSON no válido' }); }
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
       return response(400, { error: 'Datos inválidos' });
+    }
+    if (event.httpMethod === 'POST' && query.attachment === 'upload') {
+      const { slug, filename, contentBase64 } = input;
+      if (!/^[a-z0-9-]+$/.test(slug || '') || typeof filename !== 'string' ||
+          !filename.trim() || filename.length > 255 || !/\.pdf$/i.test(filename) ||
+          typeof contentBase64 !== 'string' || contentBase64.length > 6 * 1024 * 1024 ||
+          !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(contentBase64)) {
+        return response(400, { error: 'El archivo debe ser un PDF válido de hasta 4 MB' });
+      }
+      const pdf = Buffer.from(contentBase64, 'base64');
+      if (pdf.length > 4 * 1024 * 1024 || pdf.subarray(0, 5).toString('ascii') !== '%PDF-') {
+        return response(400, { error: 'El archivo debe ser un PDF válido de hasta 4 MB' });
+      }
+      const currentManifest = JSON.parse(await readFile(config, 'content/manifest.json'));
+      if (!currentManifest.pages.some(page => page.slug === slug)) {
+        return response(404, { error: 'La página ya no existe' });
+      }
+      const storedFilename = storedAttachmentName(filename.trim().split(/[\\/]/).pop());
+      await commitFiles(config, [{
+        path: `content/attachments/${slug}/${storedFilename}`,
+        content: pdf.toString('base64'),
+        encoding: 'base64'
+      }], `Upload PDF attachment to wiki page: ${slug}`);
+      return response(200, { filename: storedFilename });
     }
     if (event.httpMethod === 'PATCH') {
       if (!Array.isArray(input.categories) ||
@@ -273,9 +371,21 @@ exports.handler = async event => {
       } catch (error) {
         if (error.status !== 404) throw error;
       }
+      let attachments = [];
+      try {
+        attachments = await githubRequest(config, `contents/content/attachments/${slug}?ref=${encodeURIComponent(config.branch)}`);
+        if (!Array.isArray(attachments) || attachments.some(file =>
+          file.type !== 'file' || typeof file.name !== 'string' ||
+          !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,119}\.pdf$/i.test(file.name))) {
+          throw new Error('La lista de adjuntos de la página no es válida.');
+        }
+      } catch (error) {
+        if (error.status !== 404) throw error;
+      }
       await commitFiles(config, [
         { path: `content/${slug}.md`, delete: true },
         ...(historyExists ? [{ path: `content/history/${slug}.json`, delete: true }] : []),
+        ...attachments.map(file => ({ path: `content/attachments/${slug}/${file.name}`, delete: true })),
         { path: 'content/manifest.json', content: `${JSON.stringify(manifest, null, 2)}\n` }
       ], `Delete wiki page: ${slug}`);
     }
