@@ -4,7 +4,7 @@ A continuación se detallan los cambios que se han añadido en las diferentes ve
 
 ## Versiones
 
-:::desplegable Versión actual → 1.0b
+:::desplegable Versión actual → 1.0
 
 **Novedades más importantes**: mejoras en la seguridad y visualización
 
