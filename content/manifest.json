@@ -1,10 +1,10 @@
 {
   "pages": [
     {
-      "slug": "indice",
-      "title": "Índice",
+      "slug": "reglamento-de-regimen-interno",
+      "title": "Reglamento de Régimen Interno",
       "category": "General",
-      "summary": "Listado de todas las páginas.",
+      "summary": "",
       "order": 1
     },
     {
@@ -13,6 +13,14 @@
       "category": "General",
       "summary": "",
       "order": 2
+    },
+    {
+      "slug": "contactos-utiles",
+      "title": "Contactos útiles",
+      "category": "General",
+      "summary": "",
+      "adminOnly": true,
+      "order": 3
     },
     {
       "slug": "tesoreria",
@@ -29,11 +37,25 @@
       "order": 2
     },
     {
+      "slug": "dietas",
+      "title": "Dietas",
+      "category": "Tesorería",
+      "summary": "",
+      "order": 3
+    },
+    {
       "slug": "secretaria",
       "title": "Secretaría",
       "category": "Secretaría",
       "summary": "Gestión administrativa y comunicaciones.",
       "order": 1
+    },
+    {
+      "slug": "subvenciones",
+      "title": "Subvenciones",
+      "category": "Secretaría",
+      "summary": "",
+      "order": 2
     },
     {
       "slug": "loteria",
@@ -92,17 +114,25 @@
       "category": "Archiveros",
       "summary": "Archivo y documentación.",
       "order": 1
+    },
+    {
+      "slug": "indice",
+      "title": "Índice",
+      "category": "Contenido",
+      "summary": "Listado de todas las páginas.",
+      "order": 1
     }
   ],
   "categories": [
+    "General",
     "Tesorería",
     "Secretaría",
     "Archiveros",
     "Lotería",
-    "General",
-    "Otras páginas"
+    "Otras páginas",
+    "Contenido"
   ],
   "hiddenCategories": [
-    "General"
+    "Contenido"
   ]
 }

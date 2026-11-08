@@ -8,7 +8,7 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Ana Cutillas
 - María Martínez
 - Paula Martí
-- Raúl González
+- Raúl González - 2014
 - Silvia Juan
 
 ## Oboes
@@ -23,21 +23,21 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Alejandro Castelló
 - Antonio Martí
 - Antonio Martí Bernabéu
-- Ariadna Giménez
+- Ariadna Giménez - 2015
 - Benedicto Ripoll
 - Carlos Valls
 - Claudia Juan
 - Fernando Jiménez
-- Javier Bernabéu
+- Javier Bernabéu - 2014
 - Jose Javier García
-- Julia Grande
+- Julia Grande - 2014
 - Rosa Almiñana
 
 ## Saxofones Altos
 
 - Ana Nepomuceno - 2026
 - Candela Sanjuan
-- Carlos Burgos
+- Carlos Burgos - 2014
 - Carolina Guillem
 - Mar Valero
 - Marce Turcu
@@ -59,7 +59,7 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 ## Trompas
 
 - Bernat Pastor
-- Ferran Pastor
+- Ferran Pastor - 2014
 - Jaume Cortés
 
 ## Fliscorno
@@ -69,10 +69,10 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 ## Trompetas
 
 - Alfonso González
-- Guillem Pastor
-- José González
+- Guillem Pastor - 2014
+- José González - 2014
 - Juan José Sancho
-- Marta Serrano
+- Marta Serrano - 2014
 - Pau Valls
 
 ## Trombones
@@ -105,25 +105,20 @@ Listado de músicos del Taller Música Castell Vermell junto con su fecha de ini
 - Nicolás Hípola
 - Paco Agulló
 - Rafa Aznar
-- Rubén López
+- Rubén López - 2014
 - Sandra Verdú
 
 ## Xaramitas
 
-- Kotu Gea
-- Alejandro Castelló
-- Alfonso González
+- Kotu Gea - 2026
 - Elio Verdú
 - Esteban Verdú
-- Ferran Pastor
 - Javi Navarro
-- Jorge Segura
+- Jorge Segura - 2003
 - Jose Tomás
 - Juan José Sancho
 - Miguel Ángel Gil
 - Rosa Almiñana
 - Rosa Martínez
-- Sandra Verdú
 - Tony Cremades
-- Vicente López
 - Vicente Barrachina

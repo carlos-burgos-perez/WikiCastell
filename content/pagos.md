@@ -1,3 +1,3 @@
 # Pagos
 
-Registra aquí pagos pendientes, pagos completados y cualquier documentación asociada.
+Aqui lo que se paga a cada cosa

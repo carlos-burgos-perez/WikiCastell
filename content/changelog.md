@@ -6,6 +6,17 @@ A continuación se detallan los cambios que se han añadido en las diferentes ve
 
 :::desplegable Versión actual → 1.0b
 
+**Novedades más importantes**: mejoras en la seguridad y visualización
+
+**Lista de novedades**
+- Acceso administrador para algunas páginas
+- Posibilidad de adjuntar PDFs en las páginas
+- Visualización en teléfono móvil
+- Mejoras estéticas
+:::
+
+:::desplegable Versión 1.0a
+
 
 **Novedades más importantes**: Primera versión completa de Wiki Vermell, con navegación pública y herramientas de edición y administración.
 
